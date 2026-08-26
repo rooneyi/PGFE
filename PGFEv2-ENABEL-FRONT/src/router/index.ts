@@ -1,0 +1,81 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
+import { authRoutes } from './auth'
+import { studentRoutes } from './student.ts'
+import ModuleSelector from '@/app/ModuleSelector.vue'
+import { rhModuleRoutes } from './rh-module'
+import { moduleComptaRoutes } from './compta-module'
+import { adminRoutes } from '@/router/admin.ts'
+import { infraRoutes } from '@/router/infra.ts'
+import { stockRoutes } from '@/router/stock.ts'
+// import { useAuthStore } from '@/stores/auth' // Keeping original comment for context if needed, but adding real import
+import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
+import { locationRoutes } from './location.ts'
+import { scheduleRoutes } from './schedule'
+import { insertionRoutes } from './insertions'
+import { internatRoutes } from './internat'
+import { parentRoutes } from './parent'
+
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'root',
+    component: ModuleSelector,
+  },
+  ...adminRoutes,
+  ...authRoutes,
+  ...studentRoutes,
+  ...rhModuleRoutes,
+  ...moduleComptaRoutes,
+  ...infraRoutes,
+  ...stockRoutes,
+  ...locationRoutes,
+  ...scheduleRoutes,
+  ...insertionRoutes,
+  ...internatRoutes,
+  ...parentRoutes,
+]
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+})
+
+/* Global guards: sync lock + auth */
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const appStore = useAppStore()
+  const publicPaths = ['/login', '/register']
+
+  // ── Sync Lock Guard ───────────────────────────────────
+  // If a global sync is in progress, trap the user on the sync screen (root ModuleSelector)
+  if (appStore.isGlobalSyncing && to.name !== 'root' && !publicPaths.includes(to.path)) {
+    return next({ name: 'root' })
+  }
+
+  // Allow explicitly public paths
+  if (publicPaths.includes(to.path)) {
+    return next()
+  }
+
+  // Otherwise require authentication
+  if (!authStore.isAuthenticated) {
+    return next({ path: '/login', query: { redirect: to.fullPath } })
+  }
+
+  // Check for permission requirements (utilise le mapping centralisé rolesPermissions via authStore.can)
+  if (to.meta.permission) {
+    const permission = to.meta.permission as string
+    if (!authStore.can(permission)) {
+      // User is authenticated but doesn't have the required permission
+      console.warn(`Access denied. Missing permission: ${permission}`)
+      return next({ path: '/' })
+    }
+  }
+
+  next()
+})
+
+export default router

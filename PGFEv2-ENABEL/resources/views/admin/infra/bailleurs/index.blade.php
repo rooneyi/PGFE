@@ -1,0 +1,60 @@
+@extends('backend.layouts.app')
+
+@section('admin-content')
+    <x-admin.shadcn-shell module="infra" title="Bailleurs" subtitle="Partenaires financiers et sources de financement."
+        icon="lucide:handshake" breadcrumb-current="Bailleurs">
+        <x-slot name="actions">
+            <a href="{{ route('admin.infra-bailleurs.create') }}" class="admin-btn-primary">
+                <iconify-icon icon="lucide:plus-circle" width="16"></iconify-icon>
+                Nouveau bailleur
+            </a>
+        </x-slot>
+
+        <div class="admin-data-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-zinc-200 bg-zinc-50/80">
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">ID</th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Organisme</th>
+                            <th class="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-100">
+                        @forelse ($bailleurs as $bailleur)
+                            <tr class="hover:bg-zinc-50/50">
+                                <td class="px-4 py-3 font-mono text-xs text-zinc-500">#{{ $bailleur->id }}</td>
+                                <td class="px-4 py-3 font-semibold text-zinc-900">{{ $bailleur->name }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <a href="{{ route('admin.infra-bailleurs.edit', $bailleur) }}"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-900 hover:text-white"
+                                            title="Modifier">
+                                            <iconify-icon icon="lucide:pen-line" width="16"></iconify-icon>
+                                        </a>
+                                        <form action="{{ route('admin.infra-bailleurs.destroy', $bailleur) }}" method="POST"
+                                            class="inline" onsubmit="return confirm('Supprimer ce bailleur ?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                                title="Supprimer">
+                                                <iconify-icon icon="lucide:trash-2" width="16"></iconify-icon>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-16 text-center text-sm text-zinc-500">Aucun bailleur.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($bailleurs->hasPages())
+                <div class="border-t border-zinc-100 px-4 py-3">{{ $bailleurs->links() }}</div>
+            @endif
+        </div>
+    </x-admin.shadcn-shell>
+@endsection

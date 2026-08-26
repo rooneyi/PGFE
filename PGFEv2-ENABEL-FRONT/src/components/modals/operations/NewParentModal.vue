@@ -1,0 +1,220 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { usePostApi } from '@/composables/usePostApi'
+import { API_ROUTES } from '@/utils/constants/api_route'
+import { eventBus } from '@/utils/eventBus'
+import { showCustomToast } from '@/utils/widgets/custom_toast'
+import { toTypedSchema } from '@vee-validate/zod'
+import { useField, useForm } from 'vee-validate'
+import z from 'zod'
+import IconifySpinner from '@/components/ui/spinner/IconifySpinner.vue'
+import SpanRequired from '@/components/atoms/SpanRequired.vue'
+
+const props = defineProps<{
+  open: boolean
+}>()
+
+const emit = defineEmits(['update:open', 'created'])
+
+const { loading, error, response, postData, success } = usePostApi()
+
+const schemaForm = z.object({
+  name: z
+    .string({ required_error: 'Le nom est requis' })
+    .min(2, 'Le nom doit avoir au moins 2 caractères')
+    .max(100),
+  firstname: z
+    .string({ required_error: 'Le prénom est requis' })
+    .min(2, 'Le prénom doit avoir au moins 2 caractères')
+    .max(100),
+  lastname: z
+    .string({ required_error: 'Le postnom est requis' })
+    .min(2, 'Le postnom doit avoir au moins 2 caractères')
+    .max(100),
+  genre: z.string({ required_error: 'Le genre est requis' }),
+  phone_number: z
+    .string({ required_error: 'Le numéro de téléphone est requis' })
+    .min(2)
+    .max(30),
+  email: z.string().email('Adresse email invalide').max(255).optional().or(z.literal('')),
+})
+
+const { handleSubmit, resetForm } = useForm({
+  validationSchema: toTypedSchema(schemaForm),
+})
+
+const { value: name, errorMessage: nameError } = useField<string>('name')
+const { value: firstname, errorMessage: firstnameError } = useField<string>('firstname')
+const { value: lastname, errorMessage: lastnameError } = useField<string>('lastname')
+const { value: genre, errorMessage: genreError } = useField<string>('genre')
+const { value: phone_number, errorMessage: phoneError } = useField<string>('phone_number')
+const { value: email, errorMessage: emailError } = useField<string>('email')
+
+const onSubmit = handleSubmit(async (values) => {
+  const emailVal = email.value && typeof email.value === 'string' && email.value.trim() !== '' ? email.value.trim() : null
+  const payload = {
+    ...values,
+    email: emailVal,
+  }
+  await postData(API_ROUTES.CREATE_PARENT, payload)
+
+  if (success.value) {
+    showCustomToast({
+      message: response.value?.message || 'Parent créé avec succès',
+      type: 'success',
+    })
+    emit('created', response.value?.data)
+    resetForm()
+    emit('update:open', false)
+    eventBus.emit('parentCreated')
+  } else {
+    showCustomToast({
+      message: error.value || 'Erreur lors de la création du parent',
+      type: 'error',
+    })
+  }
+})
+
+const handleCancel = () => {
+  resetForm()
+  emit('update:open', false)
+}
+</script>
+
+<template>
+  <Dialog :open="open" @update:open="(val) => emit('update:open', val)">
+    <DialogContent class="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>Nouveau Parent</DialogTitle>
+        <DialogDescription> Enregistrer un nouveau parent dans le système. </DialogDescription>
+      </DialogHeader>
+      <form @submit.prevent="onSubmit">
+        <div class="grid gap-4 py-4">
+          <!-- Nom -->
+          <div class="flex flex-col space-y-1.5">
+            <Label for="name" class="text-sm font-medium"> Nom <SpanRequired /> </Label>
+            <Input
+              id="name"
+              v-model="name"
+              placeholder="Ex: Kasongo"
+              class="h-10 border border-gray-200/40 bg-white transition-all"
+            />
+            <span v-if="nameError" class="text-xs text-red-500">{{ nameError }}</span>
+          </div>
+
+          <!-- Postnom -->
+          <div class="flex flex-col space-y-1.5">
+            <Label for="lastname" class="text-sm font-medium"> Postnom <SpanRequired /> </Label>
+            <Input
+              id="lastname"
+              v-model="lastname"
+              placeholder="Ex: Mwenda"
+              class="h-10 border border-gray-200/40 bg-white transition-all"
+            />
+            <span v-if="lastnameError" class="text-xs text-red-500">{{ lastnameError }}</span>
+          </div>
+
+          <!-- Prénom -->
+          <div class="flex flex-col space-y-1.5">
+            <Label for="firstname" class="text-sm font-medium"> Prénom <SpanRequired /> </Label>
+            <Input
+              id="firstname"
+              v-model="firstname"
+              placeholder="Ex: Jean"
+              class="h-10 border border-gray-200/40 bg-white transition-all"
+            />
+            <span v-if="firstnameError" class="text-xs text-red-500">{{ firstnameError }}</span>
+          </div>
+
+          <!-- Genre -->
+          <div class="flex flex-col space-y-1.5">
+            <Label class="text-sm font-medium"> Genre <SpanRequired /> </Label>
+            <Select :model-value="genre" @update:modelValue="(val) => (genre = val)">
+              <SelectTrigger class="h-10 bg-white">
+                <SelectValue placeholder="Sélectionnez le genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="Masculin">Masculin</SelectItem>
+                  <SelectItem value="Féminin">Féminin</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <span v-if="genreError" class="text-xs text-red-500">{{ genreError }}</span>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="flex flex-col space-y-1.5">
+            <Label for="phone_number" class="text-sm font-medium">
+              N° Téléphone <SpanRequired />
+            </Label>
+            <Input
+              id="phone_number"
+              v-model="phone_number"
+              placeholder="Ex: +243812345678"
+              class="h-10 border border-gray-200/40 bg-white transition-all"
+            />
+            <span v-if="phoneError" class="text-xs text-red-500">{{ phoneError }}</span>
+          </div>
+
+          <!-- Email -->
+          <div class="flex flex-col space-y-1.5">
+            <Label for="email" class="text-sm font-medium"> Email </Label>
+            <Input
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="Ex: parent@example.com"
+              class="h-10 border border-gray-200/40 bg-white transition-all"
+            />
+            <span v-if="emailError" class="text-xs text-red-500">{{ emailError }}</span>
+          </div>
+        </div>
+
+        <DialogFooter class="flex justify-end gap-2 items-center">
+          <Button
+            size="sm"
+            class="h-9"
+            variant="outline"
+            type="button"
+            @click="handleCancel"
+            :disabled="loading"
+          >
+            <span class="iconify flex hugeicons--cancel-01 mr-1"></span>
+            Annuler
+          </Button>
+
+          <Button size="sm" class="h-9" type="submit" :disabled="loading">
+            <span v-if="!loading" class="flex items-center gap-2">
+              <span class="iconify hugeicons--floppy-disk mr-1"></span>
+              Enregistrer
+            </span>
+            <span v-else class="flex items-center gap-2">
+              <IconifySpinner size="lg" />
+              Enregistrement...
+            </span>
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
+</template>

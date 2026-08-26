@@ -1,0 +1,1 @@
+import{ah as s,c,o,a5 as r}from"./index-CRNoJ67S.js";const t={},a={class:"flex flex-col space-y-1.5 w-full"};function n(e,l){return o(),c("div",a,[r(e.$slots,"default")])}const _=s(t,[["render",n]]);export{_ as I};

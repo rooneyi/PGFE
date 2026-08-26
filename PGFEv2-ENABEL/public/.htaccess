@@ -1,0 +1,40 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Prefer SPA at domain root
+    RewriteRule ^$ index.html [L]
+
+    # SPA fallback (same-origin Vue) — exclude API / Laravel / static dirs
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/api(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/sanctum(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/up$ [NC]
+    RewriteCond %{REQUEST_URI} !^/storage(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/legacy(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/vendor(/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/build(/|$) [NC]
+    RewriteRule ^ index.html [L]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send remaining requests to Laravel front controller
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

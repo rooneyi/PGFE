@@ -1,0 +1,74 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  audit:
+    uses: './.github/workflows/audit.yaml'
+
+  deploy:
+    name: Deploy to Production
+    needs: [audit]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: execute ssh command
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e # Arrête le script en cas d'erreur
+
+            echo "==============================="
+            echo "🚀 Deploying pgfe-back.inafrica.tech"
+            echo "==============================="
+
+            cd ~/pgfe-back.inafrica.tech
+
+            # 1. Nettoyage et mise à jour du code
+            git reset --hard
+            git pull origin main --rebase
+
+            # 2. Gestion de composer (plus propre)
+            if grep -q 'rapids/rapids' composer.json; then
+              composer remove rapids/rapids --no-update
+            fi
+
+            composer install --no-dev --optimize-autoloader
+
+            # 3. Optimisations Laravel (Ordre : Clear puis Cache)
+            php artisan migrate --force
+
+            # On vide tout pour éviter les conflits de version
+            php artisan config:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan cache:clear
+
+            # On recréé les caches pour la performance
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            npm install -g pnpm
+            pnpm install
+            pnpm run build
+            echo "✅ Deployment finished successfully!"
+
+      - name: Notify Telegram
+        if: success()
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d text="🚀 Deployment SUCCESS
+
+          Repo: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+
+          Domain: pgfe-back.inafrica.tech
+          Time: $(date)"

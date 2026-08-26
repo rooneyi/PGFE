@@ -1,0 +1,301 @@
+@layer components {
+    /* Buttons */
+    .btn {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center focus:ring-blue-300 dark:focus:ring-blue-800;
+    }
+
+    .btn-primary {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all font-medium rounded-md text-sm px-5 py-2.5 text-center bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 dark:focus:ring-blue-800;
+    }
+
+    .btn-secondary {
+        @apply flex justify-center items-center text-gray-800 hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center bg-gray-100 hover:bg-gray-200 focus:ring-gray-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-500;
+    }
+
+    .btn-danger {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center bg-red-500 focus:ring-red-300 dark:focus:ring-red-800;
+    }
+
+    .btn-success {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center bg-green-500 focus:ring-green-300 dark:focus:ring-green-800;
+    }
+
+    .btn-default {
+        @apply flex justify-center items-center hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 focus:ring-gray-100 dark:focus:ring-green-800;
+    }
+
+    .btn-warning {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center bg-orange-500 focus:ring-orange-300 dark:focus:ring-orange-800;
+    }
+
+    .btn-info {
+        @apply flex justify-center items-center text-white hover:opacity-90 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none font-medium rounded-md text-sm px-5 py-2.5 text-center bg-blue-500 focus:ring-blue-300 dark:focus:ring-blue-800;
+    }
+
+    /* Badge */
+    .badge {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 dark:bg-gray-900/20 dark:text-gray-400 rounded-full;
+    }
+
+    .badge-primary {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-white bg-brand-300 dark:bg-primary/20 rounded-full;
+    }
+
+    .badge-success {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-400 rounded-full;
+    }
+
+    .badge-info {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 rounded-full;
+    }
+
+    .badge-warning {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-orange-800 bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 rounded-full;
+    }
+
+    .badge-danger {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-400 rounded-full;
+    }
+
+    .badge-secondary {
+        @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 dark:bg-gray-800 dark:text-gray-300 rounded-full;
+    }
+
+    /* Inputs */
+    .form-control {
+        @apply rounded border-0 px-4 py-2.5 text-sm leading-5 text-gray-800 ring-1 ring-gray-200 h-10 w-full placeholder:text-gray-400 focus:outline-primary focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:ring-gray-700 dark:focus:border-brand-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30;
+    }
+
+    .form-control-file {
+        @apply cursor-pointer border-0 file:border-0 focus:file:ring-primary ring-1 ring-gray-200 h-10 w-full overflow-hidden rounded-md bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:-mt-0.5 file:border-collapse file:cursor-pointer dark:ring-gray-700 file:rounded-l-lg file:py-3 file:px-4 file:text-sm file:text-gray-700 placeholder:text-gray-400 file:bg-gray-100 hover:file:bg-gray-100 dark:bg-gray-900 dark:text-gray-300 dark:file:bg-white/[0.03] dark:file:text-gray-400 focus:ring-2 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary;
+    }
+
+    .form-control-textarea {
+        @apply rounded border-0 px-4 py-2.5 text-sm leading-5 text-gray-800 ring-1 ring-gray-200 w-full placeholder:text-gray-400 focus:outline-primary focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:ring-gray-700 dark:focus:border-brand-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30;
+    }
+
+    .form-label {
+        @apply block font-medium mb-1.5 text-sm text-gray-700 dark:text-gray-300;
+    }
+
+    .form-checkbox {
+        @apply h-4 w-4 border checked:border-primary text-primary border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600;
+        appearance: none;
+        print-color-adjust: exact;
+        --tw-shadow: 0 0 #0000;
+        background-origin: border-box;
+        flex-shrink: 0;
+    }
+
+    .form-checkbox:checked {
+        @apply bg-primary;
+        print-color-adjust: exact;
+        background-image: url("data:image/svg+xml,%3csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 12'%3e %3cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M1 5.917 5.724 10.5 15 1.5'/%3e %3c/svg%3e");
+        background-repeat: no-repeat;
+        background-size: 0.55em 0.55em;
+        background-position: 50%;
+    }
+
+    .form-control-combobox {
+        @apply h-10 inline-flex w-full items-center justify-between gap-2 whitespace-nowrap border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:opacity-75 focus-visible:outline-2 focus-visible:outline-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 rounded-md;
+    }
+
+    /* Input Group */
+    .form-input-group {
+        @apply flex w-full;
+    }
+
+    .form-input-group .form-control {
+        @apply rounded-none min-w-0 flex-1;
+    }
+
+    .form-input-group > .form-control:first-child {
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+    }
+
+    .form-input-group > .form-control:last-child {
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+    /* Checkbox styles */
+    .tableCheckbox:checked ~ span span {
+        @apply opacity-100;
+    }
+    .tableCheckbox:checked ~ span {
+        @apply border-brand-500 bg-brand-500;
+    }
+
+    .form-check-input:checked ~ span {
+        @apply border-brand-500 dark:border-brand-500 border-[6px];
+    }
+
+    .taskCheckbox:checked ~ .box span {
+        @apply opacity-100;
+    }
+    .taskCheckbox:checked ~ p {
+        @apply text-gray-400 line-through;
+    }
+    .taskCheckbox:checked ~ .box {
+        @apply border-brand-500 bg-brand-500 dark:border-brand-500;
+    }
+
+    /* Task styles */
+    .task {
+        transition: all 0.2s ease; /* Smooth transition for visual effects */
+    }
+
+    .task.is-dragging {
+        border-radius: 0.75rem;
+        box-shadow: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+            0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+        opacity: 0.8;
+        cursor: grabbing; /* Changes the cursor to indicate dragging */
+    }
+
+    /* Table styles */
+    .table-responsive {
+        @apply space-y-3 border-t border-gray-100 dark:border-gray-800 overflow-x-auto overflow-y-visible;
+    }
+
+    .table {
+        @apply w-full dark:text-gray-300;
+    }
+
+    .table-thead {
+        @apply bg-gray-50 capitalize;
+    }
+
+    .table-thead-th {
+        @apply p-2 bg-gray-50 dark:bg-gray-800 dark:text-white text-left px-5;
+    }
+
+    .table-thead-th-last {
+        @apply text-center;
+    }
+
+    .table-tr {
+        @apply border-b border-gray-100 dark:border-gray-800;
+    }
+
+    .table-td {
+        @apply px-5 py-4 sm:px-6;
+    }
+
+    .table-td-checkbox {
+        @apply p-2 px-5;
+    }
+
+    /* Admin backend (Blade + zinc) */
+    .admin-app-shell {
+        @apply min-h-full text-zinc-950 antialiased;
+    }
+
+    .admin-sidebar-panel {
+        @apply flex h-full flex-col border-r border-zinc-300/80 bg-white font-sans shadow-[4px_0_32px_-12px_rgba(0,0,0,0.12)];
+    }
+
+    .admin-sidebar-nav {
+        @apply w-full max-w-none space-y-6 px-3 py-3;
+    }
+
+    .admin-sidebar-group-title {
+        @apply mb-2 px-3 text-left text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500;
+    }
+
+    .admin-sidebar-link {
+        @apply relative flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold leading-snug transition-all duration-200;
+    }
+
+    .admin-sidebar-link-active {
+        @apply bg-zinc-900 text-white shadow-md shadow-zinc-900/25 ring-1 ring-zinc-800;
+    }
+
+    .admin-sidebar-link-active iconify-icon {
+        @apply text-white/90;
+    }
+
+    .admin-sidebar-proved .admin-sidebar-link-active {
+        @apply bg-emerald-600 shadow-emerald-600/25 ring-emerald-700;
+    }
+
+    .admin-sidebar-link-idle {
+        @apply text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950;
+    }
+
+    .admin-sidebar-sublink {
+        @apply relative flex items-center justify-between gap-2 rounded-md py-2 pl-3 pr-2 text-[12px] font-medium leading-snug transition-colors duration-200;
+    }
+
+    .admin-sidebar-sublink-active {
+        @apply bg-zinc-100 font-semibold text-zinc-950 ring-1 ring-zinc-300 before:pointer-events-none before:absolute before:-left-3 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-zinc-900;
+    }
+
+    .admin-sidebar-sublink-active iconify-icon {
+        @apply text-zinc-900;
+    }
+
+    .admin-sidebar-sublink-idle {
+        @apply text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900;
+    }
+
+    .admin-sidebar-submenu {
+        @apply ml-2 mt-1.5 space-y-0.5 border-l-2 border-zinc-200 pl-3;
+    }
+
+    .admin-sidebar-submenu-active {
+        @apply border-zinc-900;
+    }
+
+    .admin-data-card {
+        @apply rounded-xl border border-zinc-200 bg-white shadow-sm;
+    }
+
+    .admin-btn-primary {
+        @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-5 text-xs font-bold text-white shadow-md shadow-zinc-200 transition-all hover:bg-black;
+    }
+
+    .admin-btn-secondary {
+        @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 text-xs font-bold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50;
+    }
+
+    .admin-label {
+        @apply mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-zinc-500;
+    }
+
+    .admin-input {
+        @apply w-full rounded-lg border-2 border-zinc-300 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 shadow-sm placeholder:text-zinc-500 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500;
+    }
+
+    .admin-select {
+        @apply w-full appearance-none rounded-lg border-2 border-zinc-300 bg-white px-3 py-2.5 pr-10 text-sm font-medium text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15;
+    }
+
+    .admin-textarea {
+        @apply min-h-[100px] w-full resize-y rounded-lg border-2 border-zinc-300 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 shadow-sm placeholder:text-zinc-500 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15;
+    }
+
+    .admin-form-section-title {
+        @apply mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500;
+    }
+
+    .admin-form-card {
+        @apply overflow-hidden rounded-xl border border-zinc-300 bg-white shadow-sm;
+    }
+
+    .admin-form-card form {
+        @apply space-y-6 p-6 md:p-8;
+    }
+
+  /* Champs sans classe border explicite (anciennes vues shadcn) */
+    .admin-app-shell form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([class*="admin-"]):not([class*="form-control"]),
+    .admin-app-shell form select:not([class*="admin-"]):not([class*="form-control"]),
+    .admin-app-shell form textarea:not([class*="admin-"]):not([class*="form-control"]) {
+        @apply w-full rounded-lg border-2 border-zinc-300 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 shadow-sm placeholder:text-zinc-500 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15;
+    }
+
+    .admin-btn-back {
+        @apply inline-flex h-10 items-center gap-2 rounded-lg border-2 border-zinc-300 bg-white px-4 text-xs font-bold uppercase tracking-wider text-zinc-800 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-50;
+    }
+}

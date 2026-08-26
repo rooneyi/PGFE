@@ -1,0 +1,46 @@
+# PGFE — monorepo (back + front)
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Secrets
+**/.env
+!**/.env.example
+PGFEv2-ENABEL/.env.backup
+PGFEv2-ENABEL/.env.production
+
+# Backend (Laravel)
+PGFEv2-ENABEL/vendor/
+PGFEv2-ENABEL/node_modules/
+PGFEv2-ENABEL/public/storage
+PGFEv2-ENABEL/storage/*.key
+PGFEv2-ENABEL/storage/pail
+PGFEv2-ENABEL/.phpunit.result.cache
+PGFEv2-ENABEL/.phpunit.cache/
+PGFEv2-ENABEL/auth.json
+
+# Frontend (Vue / Vite)
+PGFEv2-ENABEL-FRONT/node_modules/
+PGFEv2-ENABEL-FRONT/dist/
+PGFEv2-ENABEL-FRONT/dist.zip
+PGFEv2-ENABEL-FRONT/dist-ssr/
+PGFEv2-ENABEL-FRONT/coverage/
+PGFEv2-ENABEL-FRONT/*.tsbuildinfo
+
+# Temp / backups
+.git-backup/
+*.bak

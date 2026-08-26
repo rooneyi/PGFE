@@ -1,0 +1,1 @@
+const a=[{name:"pavillons",text:"Pavillons",href:"/internat/prealables/pavillons"},{name:"chambres",text:"Chambres",href:"/internat/prealables/chambres"},{name:"lits",text:"Lits",href:"/internat/prealables/lits"}],t=[{name:"affectations",text:"Affectations",href:"/internat/operations/affectations"}];export{t as a,a as t};
