@@ -16,41 +16,77 @@ Un seul clone contient le backend **et** le frontend.
 | `PGFEv2-ENABEL` | Backend API | Laravel 12, PHP **8.4**, MySQL, Sanctum |
 | `PGFEv2-ENABEL-FRONT` | Frontend | Vue 3, Vite, Node.js **20+** |
 
-URL locale typique :
+Après installation locale :
 - API : `http://localhost:8000`
 - Front : `http://localhost:5173` (ou `5174`)
 
-URL en ligne (exemple) :
-- Même domaine : `https://apischool.capslockdev.com` (front + API)
-
 ---
 
-## 1. Logiciels à installer
+## 1. Outils à installer (liens de téléchargement)
 
-### Obligatoire
+### Option rapide Windows (recommandé)
 
-| Outil | Version | Notes |
-|-------|---------|--------|
-| **Git** | récent | Cloner le monorepo |
-| **PHP** | **8.4** | Obligatoire (`composer.json` → `"php": "^8.4"`) |
-| **Composer** | 2.x | Dépendances PHP |
-| **MySQL** ou **MariaDB** | 8.x / 10.x | Base de données |
-| **Node.js** | **20 LTS** ou + | Front Vue / Vite |
-| **npm** | fourni avec Node | |
+Installe **Laragon** : il fournit souvent PHP, MySQL, Apache et Composer en un clic. Il faudra quand même **Node.js** à part, et vérifier que PHP est en **8.4**.
 
-Sous Windows, options simples :
-- [Laragon](https://laragon.org/) (PHP + MySQL + Composer) + installer PHP 8.4
-- ou [XAMPP](https://www.apachefriends.org/) / WAMP + PHP 8.4 séparément
-- Node : [https://nodejs.org](https://nodejs.org)
+| Outil | Lien |
+|-------|------|
+| **Laragon** (Full) | https://laragon.org/download/ |
+| **Node.js 20 LTS** | https://nodejs.org/en/download |
 
-Sous Linux (Debian/Ubuntu) :
+Puis dans Laragon : Menu → PHP → choisir / ajouter **PHP 8.4** si besoin.
+
+### Installation pièce par pièce (tous OS)
+
+| Outil | Version | Lien officiel | Notes |
+|-------|---------|---------------|--------|
+| **Git** | récent | https://git-scm.com/downloads | Obligatoire pour `git clone` |
+| **PHP** | **8.4** | https://windows.php.net/download/ (Windows) · https://www.php.net/downloads (sources / infos) | Version **8.4** obligatoire |
+| **Composer** | 2.x | https://getcomposer.org/download/ | Gestionnaire de paquets PHP |
+| **MySQL** | 8.x | https://dev.mysql.com/downloads/installer/ | Ou via Laragon / package Linux |
+| **MariaDB** (alt. MySQL) | 10.x / 11.x | https://mariadb.org/download/ | Alternative à MySQL |
+| **Node.js** | **20 LTS** ou + | https://nodejs.org/en/download | Inclut **npm** |
+| **nvm** (optionnel) | — | https://github.com/nvm-sh/nvm (Linux/macOS) · https://github.com/coreybutler/nvm-windows (Windows) | Pour gérer plusieurs versions de Node |
+
+### Suites tout-en-un (alternatives à Laragon)
+
+| Suite | Lien | Contenu typique |
+|-------|------|-----------------|
+| **Laragon** | https://laragon.org/download/ | PHP, MySQL, Apache, Composer (Windows) |
+| **XAMPP** | https://www.apachefriends.org/download.html | Apache, MySQL/MariaDB, PHP — vérifier/ajouter PHP 8.4 |
+| **WampServer** | https://www.wampserver.com/ | Apache, MySQL, PHP (Windows) |
+| **Herd** (optionnel) | https://herd.laravel.com/ | Environnement Laravel (Windows / macOS) |
+| **Docker Desktop** (optionnel) | https://www.docker.com/products/docker-desktop/ | Si tu préfères conteneuriser plus tard |
+
+### Éditeurs / clients utiles (optionnel)
+
+| Outil | Lien | Usage |
+|-------|------|--------|
+| **Cursor** ou **VS Code** | https://cursor.com/ · https://code.visualstudio.com/ | Éditer le code |
+| **HeidiSQL** | https://www.heidisql.com/download.php | Gérer MySQL (Windows) |
+| **DBeaver** | https://dbeaver.io/download/ | Client SQL multi-OS |
+| **phpMyAdmin** | souvent inclus dans Laragon/XAMPP | Interface web MySQL |
+| **Postman** | https://www.postman.com/downloads/ | Tester l’API |
+
+### Linux (Debian / Ubuntu) — paquets + liens d’aide
 
 ```bash
 sudo apt update
 sudo apt install -y git curl unzip mysql-server
-# PHP 8.4 + extensions (voir section suivante)
-# Node 20 via nodesource ou nvm
 ```
+
+| Besoin | Lien / doc |
+|--------|------------|
+| PHP 8.4 (Ubuntu) | https://launchpad.net/~ondrej/+archive/ubuntu/php |
+| Node 20 (NodeSource) | https://github.com/nodesource/distributions |
+| Composer | https://getcomposer.org/download/ |
+| MySQL | `sudo apt install mysql-server` ou https://dev.mysql.com/downloads/mysql/ |
+
+### macOS
+
+| Outil | Lien |
+|-------|------|
+| **Homebrew** (recommandé) | https://brew.sh/ |
+| Puis | `brew install git php@8.4 composer mysql node@20` |
 
 ### Extensions PHP à activer (ne pas les oublier)
 
