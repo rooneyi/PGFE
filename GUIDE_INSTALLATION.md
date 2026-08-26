@@ -2,6 +2,15 @@
 
 Ce guide permet d’installer **PGFE** sur une autre machine (local) et de le publier **en ligne**.
 
+## Dépôt (monorepo unique)
+
+| | |
+|--|--|
+| **GitHub (public)** | https://github.com/rooneyi/PGFE |
+| **Branche** | `main` |
+
+Un seul clone contient le backend **et** le frontend.
+
 | Dossier | Rôle | Stack |
 |---------|------|--------|
 | `PGFEv2-ENABEL` | Backend API | Laravel 12, PHP **8.4**, MySQL, Sanctum |
@@ -11,8 +20,8 @@ URL locale typique :
 - API : `http://localhost:8000`
 - Front : `http://localhost:5173` (ou `5174`)
 
-URL en ligne (exemple actuel) :
-- Tout sur le même domaine : `https://apischool.capslockdev.com` (front + API)
+URL en ligne (exemple) :
+- Même domaine : `https://apischool.capslockdev.com` (front + API)
 
 ---
 
@@ -22,7 +31,7 @@ URL en ligne (exemple actuel) :
 
 | Outil | Version | Notes |
 |-------|---------|--------|
-| **Git** | récent | Cloner les dépôts |
+| **Git** | récent | Cloner le monorepo |
 | **PHP** | **8.4** | Obligatoire (`composer.json` → `"php": "^8.4"`) |
 | **Composer** | 2.x | Dépendances PHP |
 | **MySQL** ou **MariaDB** | 8.x / 10.x | Base de données |
@@ -37,7 +46,6 @@ Sous Windows, options simples :
 Sous Linux (Debian/Ubuntu) :
 
 ```bash
-# Exemple (adapter selon la distro)
 sudo apt update
 sudo apt install -y git curl unzip mysql-server
 # PHP 8.4 + extensions (voir section suivante)
@@ -45,8 +53,6 @@ sudo apt install -y git curl unzip mysql-server
 ```
 
 ### Extensions PHP à activer (ne pas les oublier)
-
-Active **toutes** ces extensions dans `php.ini` (ou via le gestionnaire de paquets) :
 
 | Extension | Pourquoi |
 |-----------|----------|
@@ -75,25 +81,26 @@ node -v
 npm -v
 ```
 
-Si une extension manque, Laravel / Composer échoueront au `composer install` ou au runtime.
-
 ---
 
 ## 2. Récupérer le code
 
 ```bash
-# Exemple : placer les deux projets côte à côte
-git clone <url-repo-backend>  PGFEv2-ENABEL
-git clone <url-repo-frontend> PGFEv2-ENABEL-FRONT
+git clone https://github.com/rooneyi/PGFE.git
+cd PGFE
 ```
 
-Structure attendue :
+Structure :
 
 ```text
 PGFE/
-├── PGFEv2-ENABEL/          ← backend
-└── PGFEv2-ENABEL-FRONT/    ← frontend
+├── PGFEv2-ENABEL/           ← backend Laravel
+├── PGFEv2-ENABEL-FRONT/     ← frontend Vue
+├── GUIDE_INSTALLATION.md
+└── README.md
 ```
+
+> Il n’y a plus deux dépôts séparés : tout est dans **rooneyi/PGFE**.
 
 ---
 
@@ -131,7 +138,7 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
-Créer la base MySQL `pgfev2` (via phpMyAdmin, HeidiSQL, ou) :
+Créer la base MySQL :
 
 ```sql
 CREATE DATABASE pgfev2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -150,7 +157,7 @@ php artisan db:seed --force
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-L’API répond sur : `http://localhost:8000/api/v1/`
+API : `http://localhost:8000/api/v1/`
 
 ### (Optionnel) Storage public
 
@@ -161,6 +168,8 @@ php artisan storage:link
 ---
 
 ## 4. Installation frontend (local)
+
+Ouvrir un **second terminal** à la racine du monorepo :
 
 ```bash
 cd PGFEv2-ENABEL-FRONT
@@ -184,7 +193,7 @@ VITE_SANCTUM_BASE_URL=http://localhost:8000/
 npm run dev
 ```
 
-Ouvrir l’URL affichée par Vite (souvent `http://localhost:5173`).
+Ouvrir l’URL Vite (souvent `http://localhost:5173`).
 
 > Si le port du front change, mets à jour `FRONTEND_URL` dans le `.env` du backend.
 
@@ -199,24 +208,22 @@ Ouvrir l’URL affichée par Vite (souvent `http://localhost:5173`).
 | Admin école | `admin-ecole@gmail.com` | `codecode` |
 | Enseignant | `enseignant1@gmail.com` | `codecode` |
 
-**Change ces mots de passe** dès que tu es hors démo.
+**Change ces mots de passe** hors environnement de démo.
 
 ---
 
 ## 6. Utilisation en ligne (production)
 
-Deux approches possibles.
-
 ### Option A — Même domaine (recommandé)
 
-Front **buildé dans** `PGFEv2-ENABEL/public` → un seul domaine (ex. `https://apischool.capslockdev.com`).
+Le front est **buildé dans** `PGFEv2-ENABEL/public` → un seul domaine (ex. `https://apischool.capslockdev.com`).
 
-#### Sur la machine de build
+#### Build
 
 ```bash
 cd PGFEv2-ENABEL-FRONT
 
-# .env.production (ou .env.production.local)
+# .env.production contient déjà (dans le repo) :
 # VITE_API_BASE_URL=/api/v1/
 # VITE_SANCTUM_BASE_URL=/
 
@@ -225,20 +232,20 @@ npm run build:backend
 
 Cela écrit `index.html`, `assets/`, `fonts/` dans `PGFEv2-ENABEL/public/`.
 
-#### Sur le serveur
+#### Serveur
 
-Prérequis serveur :
-- PHP **8.4** + **mêmes extensions** que la section 1
+Prérequis :
+- PHP **8.4** + **mêmes extensions** (section 1)
 - Composer, MySQL
-- Apache ou Nginx (docroot = `.../public`)
+- Apache / Nginx → **docroot** = `PGFEv2-ENABEL/public`
 - SSL (Let’s Encrypt)
 
 ```bash
-cd /chemin/vers/PGFEv2-ENABEL
+cd /chemin/vers/PGFE/PGFEv2-ENABEL
 
 composer install --no-dev --optimize-autoloader
 
-# Configurer .env production
+# .env production :
 # APP_ENV=production
 # APP_DEBUG=false
 # APP_URL=https://ton-domaine.com
@@ -260,11 +267,11 @@ chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rwx storage bootstrap/cache
 ```
 
-Le fichier `public/.htaccess` doit servir le SPA pour les routes non-API (déjà prévu dans le projet). Le panel Blade legacy reste sous `/legacy/...`.
+Le `public/.htaccess` sert le SPA pour les routes non-API. Le panel Blade legacy reste sous `/legacy/...`.
 
 ### Option B — Deux domaines (API + Front séparés)
 
-1. Déployer le backend sur `https://api.exemple.com` (docroot `public/`).
+1. Backend sur `https://api.exemple.com` (docroot `public/`).
 2. Build front :
 
 ```bash
@@ -274,23 +281,20 @@ cd PGFEv2-ENABEL-FRONT
 npm run build-only
 ```
 
-3. Uploader le contenu de `dist/` sur `https://app.exemple.com`.
-4. Dans le `.env` backend :
+3. Uploader `dist/` sur `https://app.exemple.com`.
+4. Backend `.env` :
 
 ```env
 APP_URL=https://api.exemple.com
 FRONTEND_URL=https://app.exemple.com
 ```
 
-5. Vérifier CORS dans `config/cors.php` (origins autorisées = URL du front).
+5. CORS (`config/cors.php`) : autoriser l’URL du front.
 
 ### DNS
 
-Pour chaque domaine / sous-domaine :
 - enregistrement **A** → IP du VPS
 - puis SSL (Let’s Encrypt / Hestia / Certbot)
-
-Sans DNS correct, le navigateur et Let’s Encrypt échouent.
 
 ---
 
@@ -300,18 +304,18 @@ Sans DNS correct, le navigateur et Let’s Encrypt échouent.
 
 - [ ] PHP 8.4 + extensions listées
 - [ ] Composer, MySQL, Node 20+
-- [ ] `composer install` + `.env` + `migrate` + `db:seed`
-- [ ] `npm install` + `.env.local` pointant vers `:8000`
-- [ ] `php artisan serve` + `npm run dev`
+- [ ] `git clone https://github.com/rooneyi/PGFE.git`
+- [ ] Back : `composer install` + `.env` + `migrate` + `db:seed` + `serve`
+- [ ] Front : `npm install` + `.env.local` → `:8000` + `npm run dev`
 - [ ] Login OK
 
 ### En ligne
 
 - [ ] PHP 8.4 + **mêmes extensions**
-- [ ] Docroot = `public/`
+- [ ] Docroot = `PGFEv2-ENABEL/public/`
 - [ ] `.env` production (`APP_DEBUG=false`)
 - [ ] Migrate (+ seed si besoin)
-- [ ] Build front (`build:backend` ou `dist/`)
+- [ ] `npm run build:backend` (ou `dist/` en option B)
 - [ ] DNS A + SSL
 - [ ] `FRONTEND_URL` / CORS corrects
 - [ ] Mots de passe seed changés
@@ -322,18 +326,22 @@ Sans DNS correct, le navigateur et Let’s Encrypt échouent.
 
 | Problème | Piste |
 |----------|--------|
-| `composer` refuse / php version | Installer PHP **8.4**, pas 8.2/8.3 seul |
+| `composer` refuse / php version | Installer PHP **8.4** |
 | `ext-xxx missing` | Activer l’extension PHP manquante |
 | CORS / login front | `FRONTEND_URL` + CORS = URL exacte du front |
 | Page blanche après refresh (prod) | `.htaccess` / rewrite SPA + `index.html` présent |
-| 500 Apache sur Laravel | Vérifier droits `storage/`, `bootstrap/cache` ; éviter un `.htaccess` invalide à la racine hors `public/` |
-| Build front échoue sur `vue-tsc` | Utiliser `npm run build-only` ou `npm run build:backend` |
+| 500 Apache sur Laravel | Droits `storage/`, `bootstrap/cache` ; pas de `.htaccess` invalide hors `public/` |
+| Build front échoue sur `vue-tsc` | `npm run build-only` ou `npm run build:backend` |
 
 ---
 
 ## 9. Commandes utiles (résumé)
 
 ```bash
+# Clone
+git clone https://github.com/rooneyi/PGFE.git
+cd PGFE
+
 # Backend
 cd PGFEv2-ENABEL
 composer install
@@ -341,7 +349,7 @@ php artisan migrate --force
 php artisan db:seed --force
 php artisan serve --host=127.0.0.1 --port=8000
 
-# Frontend (dev)
+# Frontend (dev) — autre terminal
 cd PGFEv2-ENABEL-FRONT
 npm install
 npm run dev
@@ -353,4 +361,4 @@ npm run build:backend
 
 ---
 
-*Document généré pour le projet PGFE / Enabel — à adapter selon l’hébergeur (Laragon, VPS Hestia, etc.).*
+*PGFE / Enabel — monorepo public : [github.com/rooneyi/PGFE](https://github.com/rooneyi/PGFE).*
