@@ -1,159 +1,138 @@
-# Guide d’installation PGFE (Back + Front)
+# Guide d’installation PGFE — Windows
 
-Ce guide permet d’installer **PGFE** sur une autre machine (local) et de le publier **en ligne**.
+Installer **PGFE** en local sur une machine **Windows**.
 
-## Dépôt (monorepo unique)
+## Dépôt
 
 | | |
 |--|--|
 | **GitHub (public)** | https://github.com/rooneyi/PGFE |
 | **Branche** | `main` |
 
-Un seul clone contient le backend **et** le frontend.
+| Dossier | Rôle |
+|---------|------|
+| `PGFEv2-ENABEL` | Backend — Laravel 12, PHP **8.4**, MySQL |
+| `PGFEv2-ENABEL-FRONT` | Frontend — Vue 3, Vite, Node.js **20+** |
 
-| Dossier | Rôle | Stack |
-|---------|------|--------|
-| `PGFEv2-ENABEL` | Backend API | Laravel 12, PHP **8.4**, MySQL, Sanctum |
-| `PGFEv2-ENABEL-FRONT` | Frontend | Vue 3, Vite, Node.js **20+** |
-
-Après installation locale :
+Après installation :
 - API : `http://localhost:8000`
-- Front : `http://localhost:5173` (ou `5174`)
+- Front : `http://localhost:5173`
 
 ---
 
-## 1. Outils à installer (liens de téléchargement)
+## 1. Outils à installer (Windows)
 
-### Option rapide Windows (recommandé)
+### Recommandé : Laragon + Node.js
 
-Installe **Laragon** : il fournit souvent PHP, MySQL, Apache et Composer en un clic. Il faudra quand même **Node.js** à part, et vérifier que PHP est en **8.4**.
+| Outil | Lien de téléchargement |
+|-------|------------------------|
+| **Laragon Full** | https://laragon.org/download/ |
+| **Node.js 20 LTS** (Windows) | https://nodejs.org/en/download |
 
-| Outil | Lien |
+Laragon installe en général : **PHP**, **MySQL**, **Apache**, **Composer**.  
+Node.js doit être installé **à part**.
+
+Après Laragon :
+1. Démarre Laragon (**Start All**)
+2. Menu → **PHP** → choisis / ajoute **PHP 8.4**
+
+### Outils obligatoires (liens Windows)
+
+| Outil | Version | Lien |
+|-------|---------|------|
+| **Git for Windows** | récent | https://git-scm.com/download/win |
+| **PHP 8.4** (si pas Laragon) | **8.4** | https://windows.php.net/download/ |
+| **Composer-Setup.exe** | 2.x | https://getcomposer.org/download/ |
+| **MySQL Installer** (si pas Laragon) | 8.x | https://dev.mysql.com/downloads/installer/ |
+| **Node.js** | **20 LTS** ou + | https://nodejs.org/en/download |
+
+> **npm** est inclus avec Node.js — pas besoin de l’installer séparément.
+
+### Alternatives tout-en-un (Windows)
+
+| Suite | Lien |
 |-------|------|
-| **Laragon** (Full) | https://laragon.org/download/ |
-| **Node.js 20 LTS** | https://nodejs.org/en/download |
+| **Laragon** (recommandé) | https://laragon.org/download/ |
+| **XAMPP** | https://www.apachefriends.org/download.html |
+| **WampServer** | https://www.wampserver.com/ |
+| **Herd** (optionnel) | https://herd.laravel.com/ |
+| **Docker Desktop** (optionnel) | https://www.docker.com/products/docker-desktop/ |
 
-Puis dans Laragon : Menu → PHP → choisir / ajouter **PHP 8.4** si besoin.
-
-### Installation pièce par pièce (tous OS)
-
-| Outil | Version | Lien officiel | Notes |
-|-------|---------|---------------|--------|
-| **Git** | récent | https://git-scm.com/downloads | Obligatoire pour `git clone` |
-| **PHP** | **8.4** | https://windows.php.net/download/ (Windows) · https://www.php.net/downloads (sources / infos) | Version **8.4** obligatoire |
-| **Composer** | 2.x | https://getcomposer.org/download/ | Gestionnaire de paquets PHP |
-| **MySQL** | 8.x | https://dev.mysql.com/downloads/installer/ | Ou via Laragon / package Linux |
-| **MariaDB** (alt. MySQL) | 10.x / 11.x | https://mariadb.org/download/ | Alternative à MySQL |
-| **Node.js** | **20 LTS** ou + | https://nodejs.org/en/download | Inclut **npm** |
-| **nvm** (optionnel) | — | https://github.com/nvm-sh/nvm (Linux/macOS) · https://github.com/coreybutler/nvm-windows (Windows) | Pour gérer plusieurs versions de Node |
-
-### Suites tout-en-un (alternatives à Laragon)
-
-| Suite | Lien | Contenu typique |
-|-------|------|-----------------|
-| **Laragon** | https://laragon.org/download/ | PHP, MySQL, Apache, Composer (Windows) |
-| **XAMPP** | https://www.apachefriends.org/download.html | Apache, MySQL/MariaDB, PHP — vérifier/ajouter PHP 8.4 |
-| **WampServer** | https://www.wampserver.com/ | Apache, MySQL, PHP (Windows) |
-| **Herd** (optionnel) | https://herd.laravel.com/ | Environnement Laravel (Windows / macOS) |
-| **Docker Desktop** (optionnel) | https://www.docker.com/products/docker-desktop/ | Si tu préfères conteneuriser plus tard |
-
-### Éditeurs / clients utiles (optionnel)
+### Clients utiles (optionnel)
 
 | Outil | Lien | Usage |
 |-------|------|--------|
-| **Cursor** ou **VS Code** | https://cursor.com/ · https://code.visualstudio.com/ | Éditer le code |
-| **HeidiSQL** | https://www.heidisql.com/download.php | Gérer MySQL (Windows) |
-| **DBeaver** | https://dbeaver.io/download/ | Client SQL multi-OS |
-| **phpMyAdmin** | souvent inclus dans Laragon/XAMPP | Interface web MySQL |
+| **VS Code** | https://code.visualstudio.com/ | Éditeur |
+| **Cursor** | https://cursor.com/ | Éditeur |
+| **HeidiSQL** | https://www.heidisql.com/download.php | MySQL |
+| **DBeaver** | https://dbeaver.io/download/ | MySQL |
 | **Postman** | https://www.postman.com/downloads/ | Tester l’API |
+| **phpMyAdmin** | inclus dans Laragon | MySQL via navigateur |
 
-### Linux (Debian / Ubuntu) — paquets + liens d’aide
+### Extensions PHP à activer
 
-```bash
-sudo apt update
-sudo apt install -y git curl unzip mysql-server
-```
-
-| Besoin | Lien / doc |
-|--------|------------|
-| PHP 8.4 (Ubuntu) | https://launchpad.net/~ondrej/+archive/ubuntu/php |
-| Node 20 (NodeSource) | https://github.com/nodesource/distributions |
-| Composer | https://getcomposer.org/download/ |
-| MySQL | `sudo apt install mysql-server` ou https://dev.mysql.com/downloads/mysql/ |
-
-### macOS
-
-| Outil | Lien |
-|-------|------|
-| **Homebrew** (recommandé) | https://brew.sh/ |
-| Puis | `brew install git php@8.4 composer mysql node@20` |
-
-### Extensions PHP à activer (ne pas les oublier)
+Dans Laragon / `php.ini`, active :
 
 | Extension | Pourquoi |
 |-----------|----------|
-| `pdo` / `pdo_mysql` | Connexion MySQL |
-| `mbstring` | Chaînes / Laravel |
-| `openssl` | HTTPS, chiffrement |
+| `pdo` / `pdo_mysql` | MySQL |
+| `mbstring` | Laravel |
+| `openssl` | HTTPS / chiffrement |
 | `tokenizer` | Laravel |
-| `xml` / `dom` | XML, DomPDF |
-| `ctype` | Laravel |
-| `json` | API |
-| `fileinfo` | Uploads / médias |
+| `xml` / `dom` | DomPDF |
+| `ctype`, `json` | Laravel / API |
+| `fileinfo` | Uploads |
 | `bcmath` | Calculs |
-| `curl` | HTTP sortant |
-| `gd` **ou** `imagick` | Images (Media Library, Excel/PDF) |
-| `zip` | Composer, Excel, archives |
-| `intl` | Localisation / téléphone |
+| `curl` | HTTP |
+| `gd` ou `imagick` | Images |
+| `zip` | Composer / Excel |
+| `intl` | Localisation |
 | `exif` | Images (recommandé) |
 
-Vérifier :
+### Vérifier (PowerShell ou CMD)
 
-```bash
-php -v          # doit afficher 8.4.x
-php -m          # liste des extensions chargées
+```bat
+php -v
+php -m
 composer -V
 node -v
 npm -v
+git --version
 ```
+
+`php -v` doit afficher **8.4.x**.
 
 ---
 
 ## 2. Récupérer le code
 
-```bash
+Dans **PowerShell** ou **Git Bash** :
+
+```bat
 git clone https://github.com/rooneyi/PGFE.git
 cd PGFE
 ```
 
-Structure :
-
 ```text
-PGFE/
-├── PGFEv2-ENABEL/           ← backend Laravel
-├── PGFEv2-ENABEL-FRONT/     ← frontend Vue
+PGFE\
+├── PGFEv2-ENABEL\           ← backend
+├── PGFEv2-ENABEL-FRONT\     ← frontend
 ├── GUIDE_INSTALLATION.md
 └── README.md
 ```
 
-> Il n’y a plus deux dépôts séparés : tout est dans **rooneyi/PGFE**.
-
 ---
 
-## 3. Installation backend (local)
+## 3. Backend (local)
 
-```bash
+```bat
 cd PGFEv2-ENABEL
-
 composer install
-
-copy .env.example .env          # Windows
-# cp .env.example .env          # Linux / macOS
-
+copy .env.example .env
 php artisan key:generate
 ```
 
-### Configurer `.env` (extrait)
+### `.env` (extrait)
 
 ```env
 APP_NAME="PGFE ENABEL"
@@ -174,68 +153,51 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
-Créer la base MySQL :
+> Sous Laragon, le mot de passe MySQL `root` est souvent **vide**.
+
+Créer la base (HeidiSQL, phpMyAdmin, ou MySQL) :
 
 ```sql
 CREATE DATABASE pgfev2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### Migrations + seeders
-
-```bash
+```bat
 php artisan migrate --force
 php artisan db:seed --force
-```
-
-### Lancer l’API
-
-```bash
+php artisan storage:link
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
 API : `http://localhost:8000/api/v1/`
 
-### (Optionnel) Storage public
-
-```bash
-php artisan storage:link
-```
-
 ---
 
-## 4. Installation frontend (local)
+## 4. Frontend (local)
 
-Ouvrir un **second terminal** à la racine du monorepo :
+Ouvre un **deuxième** terminal :
 
-```bash
+```bat
 cd PGFEv2-ENABEL-FRONT
-
 npm install
-
-copy .env.example .env.local          # Windows
-# cp .env.example .env.local          # Linux / macOS
+copy .env.example .env.local
 ```
 
-### Configurer `.env.local`
+### `.env.local`
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000/api/v1/
 VITE_SANCTUM_BASE_URL=http://localhost:8000/
 ```
 
-### Lancer le front
-
-```bash
+```bat
 npm run dev
 ```
 
-Ouvrir l’URL Vite (souvent `http://localhost:5173`).
-
-> Si le port du front change, mets à jour `FRONTEND_URL` dans le `.env` du backend.
+Ouvre `http://localhost:5173` (ou le port affiché par Vite).
 
 ---
 
-## 5. Accès après seed (local / démo)
+## 5. Accès après seed
 
 | Rôle | Email | Mot de passe |
 |------|--------|--------------|
@@ -244,157 +206,66 @@ Ouvrir l’URL Vite (souvent `http://localhost:5173`).
 | Admin école | `admin-ecole@gmail.com` | `codecode` |
 | Enseignant | `enseignant1@gmail.com` | `codecode` |
 
-**Change ces mots de passe** hors environnement de démo.
+Change ces mots de passe hors démo.
 
 ---
 
-## 6. Utilisation en ligne (production)
+## 6. Build pour production (depuis Windows)
 
-### Option A — Même domaine (recommandé)
+Pour générer le front **dans** le backend (même domaine) :
 
-Le front est **buildé dans** `PGFEv2-ENABEL/public` → un seul domaine (ex. `https://apischool.capslockdev.com`).
-
-#### Build
-
-```bash
+```bat
 cd PGFEv2-ENABEL-FRONT
-
-# .env.production contient déjà (dans le repo) :
-# VITE_API_BASE_URL=/api/v1/
-# VITE_SANCTUM_BASE_URL=/
-
 npm run build:backend
 ```
 
-Cela écrit `index.html`, `assets/`, `fonts/` dans `PGFEv2-ENABEL/public/`.
-
-#### Serveur
-
-Prérequis :
-- PHP **8.4** + **mêmes extensions** (section 1)
-- Composer, MySQL
-- Apache / Nginx → **docroot** = `PGFEv2-ENABEL/public`
-- SSL (Let’s Encrypt)
-
-```bash
-cd /chemin/vers/PGFE/PGFEv2-ENABEL
-
-composer install --no-dev --optimize-autoloader
-
-# .env production :
-# APP_ENV=production
-# APP_DEBUG=false
-# APP_URL=https://ton-domaine.com
-# FRONTEND_URL=https://ton-domaine.com
-# DB_* = identifiants MySQL prod
-
-php artisan key:generate          # une seule fois
-php artisan migrate --force
-php artisan db:seed --force       # optionnel (démo)
-php artisan config:cache
-php artisan route:cache
-php artisan storage:link
-```
-
-Permissions (Linux) :
-
-```bash
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R ug+rwx storage bootstrap/cache
-```
-
-Le `public/.htaccess` sert le SPA pour les routes non-API. Le panel Blade legacy reste sous `/legacy/...`.
-
-### Option B — Deux domaines (API + Front séparés)
-
-1. Backend sur `https://api.exemple.com` (docroot `public/`).
-2. Build front :
-
-```bash
-cd PGFEv2-ENABEL-FRONT
-# VITE_API_BASE_URL=https://api.exemple.com/api/v1/
-# VITE_SANCTUM_BASE_URL=https://api.exemple.com/
-npm run build-only
-```
-
-3. Uploader `dist/` sur `https://app.exemple.com`.
-4. Backend `.env` :
-
-```env
-APP_URL=https://api.exemple.com
-FRONTEND_URL=https://app.exemple.com
-```
-
-5. CORS (`config/cors.php`) : autoriser l’URL du front.
-
-### DNS
-
-- enregistrement **A** → IP du VPS
-- puis SSL (Let’s Encrypt / Hestia / Certbot)
+Les fichiers vont dans `PGFEv2-ENABEL\public\` (`index.html`, `assets\`, …).  
+Ensuite tu déploies le dossier `PGFEv2-ENABEL` sur ton serveur (docroot = `public`).
 
 ---
 
-## 7. Checklist rapide
+## 7. Checklist Windows
 
-### Local
-
-- [ ] PHP 8.4 + extensions listées
-- [ ] Composer, MySQL, Node 20+
+- [ ] Laragon (ou PHP 8.4 + MySQL + Composer) + **Node 20**
+- [ ] Git for Windows
+- [ ] Extensions PHP activées
 - [ ] `git clone https://github.com/rooneyi/PGFE.git`
-- [ ] Back : `composer install` + `.env` + `migrate` + `db:seed` + `serve`
-- [ ] Front : `npm install` + `.env.local` → `:8000` + `npm run dev`
-- [ ] Login OK
-
-### En ligne
-
-- [ ] PHP 8.4 + **mêmes extensions**
-- [ ] Docroot = `PGFEv2-ENABEL/public/`
-- [ ] `.env` production (`APP_DEBUG=false`)
-- [ ] Migrate (+ seed si besoin)
-- [ ] `npm run build:backend` (ou `dist/` en option B)
-- [ ] DNS A + SSL
-- [ ] `FRONTEND_URL` / CORS corrects
-- [ ] Mots de passe seed changés
+- [ ] Back : `composer install` → `.env` → migrate → seed → `serve`
+- [ ] Front : `npm install` → `.env.local` → `npm run dev`
+- [ ] Login OK sur `http://localhost:5173`
 
 ---
 
-## 8. Dépannage courant
+## 8. Dépannage Windows
 
 | Problème | Piste |
 |----------|--------|
-| `composer` refuse / php version | Installer PHP **8.4** |
-| `ext-xxx missing` | Activer l’extension PHP manquante |
-| CORS / login front | `FRONTEND_URL` + CORS = URL exacte du front |
-| Page blanche après refresh (prod) | `.htaccess` / rewrite SPA + `index.html` présent |
-| 500 Apache sur Laravel | Droits `storage/`, `bootstrap/cache` ; pas de `.htaccess` invalide hors `public/` |
-| Build front échoue sur `vue-tsc` | `npm run build-only` ou `npm run build:backend` |
+| `php` inconnu | Ajoute PHP au **PATH** ou ouvre le terminal **Laragon** |
+| Mauvaise version PHP | Laragon → Menu → PHP → **8.4** |
+| `composer` / `ext-xxx` | Active l’extension dans `php.ini`, redémarre |
+| MySQL refuse la connexion | Vérifie que Laragon a démarré MySQL ; `DB_PASSWORD=` souvent vide |
+| Port 8000 / 5173 occupé | Change le port ou ferme l’autre app |
+| Build `vue-tsc` échoue | Utilise `npm run build-only` ou `npm run build:backend` |
 
 ---
 
-## 9. Commandes utiles (résumé)
+## 9. Commandes utiles
 
-```bash
-# Clone
+```bat
 git clone https://github.com/rooneyi/PGFE.git
 cd PGFE
 
-# Backend
 cd PGFEv2-ENABEL
 composer install
 php artisan migrate --force
 php artisan db:seed --force
 php artisan serve --host=127.0.0.1 --port=8000
 
-# Frontend (dev) — autre terminal
 cd PGFEv2-ENABEL-FRONT
 npm install
 npm run dev
-
-# Frontend → intégré dans le backend (prod same-origin)
-cd PGFEv2-ENABEL-FRONT
-npm run build:backend
 ```
 
 ---
 
-*PGFE / Enabel — monorepo public : [github.com/rooneyi/PGFE](https://github.com/rooneyi/PGFE).*
+*Windows uniquement — monorepo : [github.com/rooneyi/PGFE](https://github.com/rooneyi/PGFE).*
