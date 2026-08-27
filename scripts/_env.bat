@@ -66,13 +66,17 @@ if defined LARAGON_ROOT if exist "%LARAGON_ROOT%\bin\php" (
 )
 
 REM System PHP 8.4+ (common if installed outside Laragon)
-if exist "C:\Program Files\PHP\php.exe" (
-  "C:\Program Files\PHP\php.exe" -r "exit(version_compare(PHP_VERSION,'8.4.0','>=')?0:1);" >nul 2>&1
-  if not errorlevel 1 (
-    set "PHP_DIR=C:\Program Files\PHP"
-    goto :eof
-  )
-)
+REM Note: no parentheses around php -r (cmd would misparse ')' inside the string)
+if exist "C:\Program Files\PHP\php.exe" goto :check_system_php
+goto :php_fallback
+
+:check_system_php
+"C:\Program Files\PHP\php.exe" -r "exit(version_compare(PHP_VERSION,'8.4.0','>=')?0:1);" >nul 2>&1
+if errorlevel 1 goto :php_fallback
+set "PHP_DIR=C:\Program Files\PHP"
+goto :eof
+
+:php_fallback
 
 if defined LARAGON_ROOT if exist "%LARAGON_ROOT%\bin\php" (
   for /f "delims=" %%D in ('dir /b /ad /o-n "%LARAGON_ROOT%\bin\php\php-*" 2^>nul') do (

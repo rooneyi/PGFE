@@ -14,6 +14,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+  },
   // Build directement dans Laravel public/ → même domaine que l'API
   build: {
     outDir: laravelPublic,
