@@ -16,6 +16,8 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+scripts/logs/*.pid
+!scripts/logs/.gitkeep
 
 # Secrets
 **/.env

@@ -4,10 +4,10 @@ chcp 65001 >nul
 title PGFE - Creer le raccourci
 
 echo.
-echo Creation du raccourci PGFE.lnk ...
+echo Creation du raccourci PGFE.lnk sur le Bureau...
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0create-shortcut.ps1" -AskDesktop
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0create-shortcut.ps1" -AlsoDesktop -OpenDesktop
 if errorlevel 1 (
   echo [ERREUR] Echec de la creation du raccourci.
   pause

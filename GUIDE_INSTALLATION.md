@@ -6,59 +6,51 @@ Installer et lancer **PGFE** sur un PC Windows **sans taper de commandes au quot
 
 ---
 
-## 1. À installer une seule fois
+## 1. Une seule fois — installateur automatique
 
-| Outil | Lien |
-|-------|------|
-| **Laragon Full** | https://laragon.org/download/ |
-| **Node.js 20 LTS** | https://nodejs.org/en/download |
-| **Git for Windows** | https://git-scm.com/download/win |
+Vous n’avez **pas** besoin d’installer Laragon, Node.js ou Git à la main.
 
-Après l’installation de Laragon :
-1. Ouvrez Laragon et cliquez **Start All**
-2. Menu → **PHP** → choisissez **PHP 8.4** (ou la version 8.x la plus récente)
+### Option A — Fichier installateur (recommandé)
 
----
+1. Téléchargez `INSTALLER-PGFE.bat` (ou le dépôt ZIP / clone GitHub)
+2. Double-cliquez sur **`INSTALLER-PGFE.bat`**
 
-## 2. Télécharger le projet
+L’installateur :
+- installe **Git**, **Node.js 20+** et **Laragon** s’ils manquent (fenêtre UAC possible)
+- **clone** le projet dans `%USERPROFILE%\Desktop\PGFE` s’il n’est pas déjà présent  
+  (repli : `%USERPROFILE%\PGFE` ; si vous lancez depuis un clone existant, aucun nouveau clone)
+- lance `scripts\setup-pgfe.bat` (composer, npm, base, migrations, seeders)
+- crée le raccourci **`PGFE.lnk` sur le Bureau**
+
+### Option B — Déjà cloné
 
 ```bat
 git clone https://github.com/rooneyi/PGFE.git
 cd PGFE
-```
-
----
-
-## 3. Installation initiale (une seule fois)
-
-Double-cliquez sur :
-
-```
 scripts\setup-pgfe.bat
 ```
 
-Ce script fait automatiquement :
-- `composer install`, `.env`, clé Laravel, migrations, seeders
-- création de la base `pgfev2` si MySQL Laragon est dispo
-- `npm install` et `.env.local`
-- création du raccourci **PGFE.lnk** (projet + Bureau si vous acceptez)
+`setup-pgfe.bat` installe aussi les outils manquants, puis prépare backend + frontend.
 
-Attendez la fin du message « Installation terminee ».
+Après Laragon : menu **PHP** → choisissez **PHP 8.4** si besoin.
+
+> Si l’URL de téléchargement Laragon change, voir https://laragon.org/download/ ou https://github.com/leokhoa/laragon/releases
 
 ---
 
-## 4. Usage quotidien
+## 2. Usage quotidien
 
-Double-cliquez sur **`PGFE.lnk`** (Bureau ou racine du dossier PGFE).
+Double-cliquez sur **`PGFE.lnk`** sur le **Bureau**.
 
-Cela démarre automatiquement :
-1. Laragon (s’il n’est pas déjà ouvert)
-2. le backend Laravel
-3. le frontend Vue
-4. le navigateur sur **http://localhost:5173**
+Cela démarre :
+1. Laragon (fenêtre normale)
+2. le backend Laravel et le frontend Vue **en arrière-plan** (pas de fenêtres CMD noires)
+3. le navigateur sur **http://localhost:5173**
 
-Pour arrêter backend + frontend : double-cliquez sur `scripts\stop-pgfe.bat`  
-(Laragon reste ouvert ; fermez-le manuellement si besoin.)
+Logs de debug : `scripts\logs\backend.log` et `scripts\logs\frontend.log`
+
+Pour arrêter backend + frontend : `scripts\stop-pgfe.bat`  
+(Laragon reste ouvert.)
 
 Si le raccourci manque :
 
@@ -66,9 +58,11 @@ Si le raccourci manque :
 scripts\create-shortcut.bat
 ```
 
+Le script affiche le **chemin complet** du raccourci Bureau (y compris Bureau OneDrive).
+
 ---
 
-## 5. Connexion
+## 3. Connexion
 
 | Email | Mot de passe |
 |--------|--------------|
@@ -83,11 +77,12 @@ Changez le mot de passe après la 1ʳᵉ connexion.
 | Problème | Solution |
 |----------|----------|
 | Rien ne démarre | Ouvrez Laragon → **Start All**, puis relancez `PGFE.lnk` |
-| `php` / Composer introuvable | Installez **PHP 8.4+** (Laragon → PHP → 8.4) puis relancez |
-| Erreur « PHP version >= 8.4 » | Laragon n’a que 8.3 : ajoutez PHP 8.4 dans Laragon, ou installez PHP 8.4 système |
+| Outils manquants | Relancez `INSTALLER-PGFE.bat` ou `scripts\setup-pgfe.bat` |
+| Erreur « PHP version >= 8.4 » | Laragon → PHP → 8.4 |
 | Erreur MySQL / migrate | Laragon **Start All** ; mot de passe MySQL souvent vide |
-| Page blanche | Vérifiez que backend (8000) et front (5173) tournent |
-| Port déjà utilisé | Normal si déjà lancé ; ou utilisez `stop-pgfe.bat` puis relancez |
+| Page blanche | Attendez 5–10 s ; vérifiez `scripts\logs\` |
+| Raccourci invisible | Relancez `scripts\create-shortcut.bat` ; regardez aussi OneDrive\Desktop |
+| Port déjà utilisé | Normal si déjà lancé ; ou `stop-pgfe.bat` puis relancez |
 
 ---
 
