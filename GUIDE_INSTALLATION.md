@@ -1,33 +1,22 @@
 # Guide d’installation PGFE — Windows (client)
 
-Installer et lancer **PGFE** sur un PC Windows.
+Installer et lancer **PGFE** sur un PC Windows **sans taper de commandes au quotidien**.
 
 **Code :** https://github.com/rooneyi/PGFE
 
 ---
 
-## 1. À installer (liens)
+## 1. À installer une seule fois
 
-| Outil | Lien | Pourquoi |
-|-------|------|----------|
-| **Laragon Full** | https://laragon.org/download/ | PHP, MySQL, Composer |
-| **Node.js 20 LTS** | https://nodejs.org/en/download | Frontend |
-| **Git for Windows** | https://git-scm.com/download/win | Télécharger le projet |
+| Outil | Lien |
+|-------|------|
+| **Laragon Full** | https://laragon.org/download/ |
+| **Node.js 20 LTS** | https://nodejs.org/en/download |
+| **Git for Windows** | https://git-scm.com/download/win |
 
-Après Laragon :
-1. Clique **Start All**
-2. Menu → **PHP** → choisis **PHP 8.4**
-
-Vérifie dans un terminal Laragon :
-
-```bat
-php -v
-composer -V
-node -v
-git --version
-```
-
-`php -v` doit afficher **8.4**.
+Après l’installation de Laragon :
+1. Ouvrez Laragon et cliquez **Start All**
+2. Menu → **PHP** → choisissez **PHP 8.4** (ou la version 8.x la plus récente)
 
 ---
 
@@ -40,55 +29,42 @@ cd PGFE
 
 ---
 
-## 3. Backend
+## 3. Installation initiale (une seule fois)
 
-```bat
-cd PGFEv2-ENABEL
-composer install
-copy .env.example .env
-php artisan key:generate
+Double-cliquez sur :
+
+```
+scripts\setup-pgfe.bat
 ```
 
-Dans `.env`, laisse en général :
+Ce script fait automatiquement :
+- `composer install`, `.env`, clé Laravel, migrations, seeders
+- création de la base `pgfev2` si MySQL Laragon est dispo
+- `npm install` et `.env.local`
+- création du raccourci **PGFE.lnk** (projet + Bureau si vous acceptez)
 
-```env
-DB_DATABASE=pgfev2
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-(Laragon : mot de passe MySQL souvent vide.)
-
-Crée la base (phpMyAdmin Laragon, ou HeidiSQL) :
-
-```sql
-CREATE DATABASE pgfev2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Puis :
-
-```bat
-php artisan migrate --force
-php artisan db:seed --force
-php artisan serve --host=127.0.0.1 --port=8000
-```
-
-Laisse cette fenêtre ouverte.
+Attendez la fin du message « Installation terminee ».
 
 ---
 
-## 4. Frontend
+## 4. Usage quotidien
 
-Ouvre un **2ᵉ terminal** :
+Double-cliquez sur **`PGFE.lnk`** (Bureau ou racine du dossier PGFE).
 
-```bat
-cd PGFEv2-ENABEL-FRONT
-npm install
-copy .env.example .env.local
-npm run dev
+Cela démarre automatiquement :
+1. Laragon (s’il n’est pas déjà ouvert)
+2. le backend Laravel
+3. le frontend Vue
+4. le navigateur sur **http://localhost:5173**
+
+Pour arrêter backend + frontend : double-cliquez sur `scripts\stop-pgfe.bat`  
+(Laragon reste ouvert ; fermez-le manuellement si besoin.)
+
+Si le raccourci manque :
+
 ```
-
-Ouvre le navigateur : **http://localhost:5173**
+scripts\create-shortcut.bat
+```
 
 ---
 
@@ -98,7 +74,7 @@ Ouvre le navigateur : **http://localhost:5173**
 |--------|--------------|
 | `superadmin@pgfe.com` | `SuperAdmin@2025` |
 
-Change le mot de passe après la 1ʳᵉ connexion.
+Changez le mot de passe après la 1ʳᵉ connexion.
 
 ---
 
@@ -106,10 +82,12 @@ Change le mot de passe après la 1ʳᵉ connexion.
 
 | Problème | Solution |
 |----------|----------|
-| `php` introuvable | Ouvre le terminal **depuis Laragon** |
-| Mauvaise version PHP | Laragon → PHP → **8.4** |
-| Erreur MySQL | **Start All** dans Laragon ; `DB_PASSWORD=` vide |
-| Page front blanche | Vérifie que le backend tourne sur le port **8000** |
+| Rien ne démarre | Ouvrez Laragon → **Start All**, puis relancez `PGFE.lnk` |
+| `php` / Composer introuvable | Installez **PHP 8.4+** (Laragon → PHP → 8.4) puis relancez |
+| Erreur « PHP version >= 8.4 » | Laragon n’a que 8.3 : ajoutez PHP 8.4 dans Laragon, ou installez PHP 8.4 système |
+| Erreur MySQL / migrate | Laragon **Start All** ; mot de passe MySQL souvent vide |
+| Page blanche | Vérifiez que backend (8000) et front (5173) tournent |
+| Port déjà utilisé | Normal si déjà lancé ; ou utilisez `stop-pgfe.bat` puis relancez |
 
 ---
 

@@ -44,3 +44,7 @@ PGFEv2-ENABEL-FRONT/*.tsbuildinfo
 # Temp / backups
 .git-backup/
 *.bak
+
+# Client launcher (generated locally — absolute paths)
+PGFE.lnk
+**/PGFE.lnk
