@@ -23,15 +23,19 @@ if (-not (Test-Path $startBat)) {
 }
 
 function Get-PgfeIcon {
+    # Prefer dedicated PGFE logo ICO (not Vue default favicon)
     $candidates = @(
-        (Join-Path $root "PGFEv2-ENABEL\public\favicon.ico"),
+        (Join-Path $scriptsDir "pgfe.ico"),
+        (Join-Path $root "PGFEv2-ENABEL-FRONT\public\pgfe.ico"),
+        (Join-Path $root "PGFEv2-ENABEL\public\pgfe.ico"),
         (Join-Path $root "PGFEv2-ENABEL-FRONT\public\favicon.ico"),
+        (Join-Path $root "PGFEv2-ENABEL\public\favicon.ico"),
         "C:\laragon\laragon.exe",
         (Join-Path $env:USERPROFILE "laragon\laragon.exe"),
         "$env:SystemRoot\System32\shell32.dll"
     )
     foreach ($c in $candidates) {
-        if (Test-Path $c) { return $c }
+        if (Test-Path $c) { return (Resolve-Path $c).Path }
     }
     return $null
 }
