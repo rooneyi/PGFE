@@ -50,11 +50,21 @@ interface AdminUser {
 }
 
 const auth = useAuthStore()
-const canCreate = computed(() => auth.can('users.create.any') || auth.can('users.create.tiers'))
-const canUpdate = computed(() => auth.can('users.update'))
-const canDelete = computed(() => auth.can('users.delete'))
-// Admin-ecole : rôle forcé à "tiers", super-admin / admin peut choisir
-const forceTiers = computed(() => !auth.can('users.create.any'))
+const canCreate = computed(
+  () =>
+    auth.can('users.create.any') ||
+    auth.can('users.create.tiers') ||
+    auth.hasRole('super-admin') ||
+    auth.hasRole('admin') ||
+    auth.hasRole('admin-ecole'),
+)
+const canUpdate = computed(
+  () => auth.can('users.update') || auth.hasRole('super-admin') || auth.hasRole('admin-ecole'),
+)
+const canDelete = computed(() => auth.can('users.delete') || auth.hasRole('super-admin'))
+// Admin-ecole : rôle forcé à "tiers", super-admin peut choisir
+const canCreateAny = computed(() => auth.can('users.create.any') || auth.hasRole('super-admin'))
+const forceTiers = computed(() => !canCreateAny.value)
 
 const breadcrumbItems = {
   items: [
@@ -77,6 +87,11 @@ const { data: rolesData, fetchData: fetchRoles } = useGetApi<any>(API_ROUTES.GET
 const { data: personalsData, fetchData: fetchPersonals } = useGetApi<any[]>(
   API_ROUTES.GET_ACADEMIC_PERSONALS,
 )
+const { data: schoolsData, fetchData: fetchSchools } = useGetApi<
+  { id: number; name: string }[]
+>(API_ROUTES.GET_SCHOOLS)
+
+const schoolsList = computed(() => schoolsData.value || [])
 
 const availableRoles = computed(() => {
   const roles = rolesData.value?.roles || []
@@ -130,6 +145,7 @@ const createName = ref('')
 const createEmail = ref('')
 const createPassword = ref('')
 const createRole = ref('tiers')
+const createSchoolId = ref<string>('')
 
 const selectedPersonalId = ref<number | string>('')
 const selectedPersonalRole = ref<string>('enseignant')
@@ -139,11 +155,15 @@ function openCreateModal() {
   createName.value = ''
   createEmail.value = ''
   createPassword.value = ''
-  createRole.value = forceTiers.value ? 'tiers' : 'tiers'
+  createRole.value = 'tiers'
+  createSchoolId.value = auth.userSchoolId ? String(auth.userSchoolId) : ''
   selectedPersonalId.value = ''
   selectedPersonalRole.value = forceTiers.value ? 'tiers' : 'enseignant'
   createOpen.value = true
   fetchRoles()
+  if (canCreateAny.value) {
+    fetchSchools()
+  }
 }
 
 async function onSubmitCreate() {
@@ -167,7 +187,9 @@ async function onSubmitCreate() {
   }
 
   const payload: Record<string, unknown> = { name, email, password, role }
-  if (auth.userSchoolId) {
+  if (canCreateAny.value && createSchoolId.value) {
+    payload.school_id = Number(createSchoolId.value)
+  } else if (auth.userSchoolId) {
     payload.school_id = Number(auth.userSchoolId)
   }
 
@@ -575,6 +597,26 @@ onBeforeUnmount(() => {
                     :value="role.name"
                   >
                     <span class="capitalize">{{ role.label }}</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p v-if="forceTiers" class="text-xs text-foreground-muted">
+                En tant qu'admin école, seuls les comptes « tiers » sont autorisés.
+              </p>
+            </div>
+            <div v-if="canCreateAny" class="flex flex-col space-y-1.5">
+              <Label>École</Label>
+              <Select v-model="createSchoolId" :disabled="creating">
+                <SelectTrigger class="w-full h-10">
+                  <SelectValue placeholder="Choisir une école..." />
+                </SelectTrigger>
+                <SelectContent class="max-h-[200px]">
+                  <SelectItem
+                    v-for="school in schoolsList"
+                    :key="school.id"
+                    :value="String(school.id)"
+                  >
+                    {{ school.name }}
                   </SelectItem>
                 </SelectContent>
               </Select>
