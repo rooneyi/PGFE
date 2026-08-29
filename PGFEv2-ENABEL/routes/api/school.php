@@ -27,7 +27,10 @@ Route::middleware('auth:sanctum')
             Route::get('/', [SchoolYearController::class, 'index']);
             Route::get('active', [SchoolYearController::class, 'active']);
             Route::post('/', [SchoolYearController::class, 'store']);
+            Route::put('{schoolYear}', [SchoolYearController::class, 'update']);
+            Route::delete('{schoolYear}', [SchoolYearController::class, 'destroy']);
             Route::put('{schoolYear}/activate', [SchoolYearController::class, 'activate']);
+            Route::post('{schoolYear}/activate', [SchoolYearController::class, 'activate']);
         });
         // Filières (optionnel, si rattaché à l'école)
         Route::prefix('filiaires')->group(function () {

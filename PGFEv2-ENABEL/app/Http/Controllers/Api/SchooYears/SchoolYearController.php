@@ -29,11 +29,23 @@ final class SchoolYearController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => 'nullable|exists:schools,id',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
             'description' => 'nullable|string',
         ]);
+
+        $user = $request->user();
+        if (empty($data['school_id'])) {
+            $data['school_id'] = $user?->school_id;
+        }
+
+        if (empty($data['school_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucune école associée : school_id requis',
+            ], 422);
+        }
 
         // Prévention double activation
         if (! empty($data['is_active']) && $data['is_active']) {

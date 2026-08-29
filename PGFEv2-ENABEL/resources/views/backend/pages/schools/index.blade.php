@@ -84,9 +84,6 @@
                                         <div>
                                             <p class="font-bold text-gray-800 dark:text-white">{{ $s->name }}</p>
                                             <p class="text-xs text-gray-400">ID: #{{ str_pad((string)$s->id, 4, '0', STR_PAD_LEFT) }}</p>
-                                            @if($s->sousDivision)
-                                                <p class="text-[10px] text-violet-600 font-semibold">SD: {{ $s->sousDivision->name }}</p>
-                                            @endif
                                             @if(session('selected_school_id') == $s->id)
                                                 <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px] font-black uppercase tracking-wider">
                                                     <iconify-icon icon="lucide:check-circle" width="10"></iconify-icon>

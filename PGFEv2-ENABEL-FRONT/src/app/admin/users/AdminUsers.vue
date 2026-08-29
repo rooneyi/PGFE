@@ -2,7 +2,7 @@
 import DashLayout from '@/components/templates/DashLayout.vue'
 import DashPageHeader from '@/components/templates/DashPageHeader.vue'
 import BoxPanelWrapper from '@/components/atoms/BoxPanelWrapper.vue'
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useGetApi } from '@/composables/useGetApi.ts'
 import { useDeleteApi } from '@/composables/useDeleteApi.ts'
 import { usePostApi } from '@/composables/usePostApi.ts'
@@ -53,7 +53,7 @@ const auth = useAuthStore()
 const canCreate = computed(() => auth.can('users.create.any') || auth.can('users.create.tiers'))
 const canUpdate = computed(() => auth.can('users.update'))
 const canDelete = computed(() => auth.can('users.delete'))
-// Admin-ecole : rôle forcé à "tiers", super-admin peut choisir n'importe quel rôle
+// Admin-ecole : rôle forcé à "tiers", super-admin / admin peut choisir
 const forceTiers = computed(() => !auth.can('users.create.any'))
 
 const breadcrumbItems = {
@@ -70,24 +70,116 @@ const activeTagName = computed(() => 'users')
 const query = ref('')
 const { data, loading, error, fetchData } = useGetApi<AdminUser[]>(API_ROUTES.GET_ADMIN_USERS)
 const { deleteItem, deleting, errorDelete: delError } = useDeleteApi()
-const { postData, loading: creating, error: createError, response: createResponse } = usePostApi<any>()
+const { postData, loading: creating, error: createError } = usePostApi<any>()
 const { putData, loading: updating, error: updError, response: updResponse } = usePutApi()
 
-// Listes pour le formulaire "Lier à un personnel"
 const { data: rolesData, fetchData: fetchRoles } = useGetApi<any>(API_ROUTES.GET_ROLES)
-const { data: personalsData, fetchData: fetchPersonals } = useGetApi<any[]>(API_ROUTES.GET_ACADEMIC_PERSONALS)
+const { data: personalsData, fetchData: fetchPersonals } = useGetApi<any[]>(
+  API_ROUTES.GET_ACADEMIC_PERSONALS,
+)
 
-const availableRoles = computed(() => rolesData.value?.roles || [])
-// On ne filtre que les personnels qui n'ont pas encore de compte utilisateur
+const availableRoles = computed(() => {
+  const roles = rolesData.value?.roles || []
+  if (forceTiers.value) {
+    return roles.filter((r: { name: string }) => r.name === 'tiers')
+  }
+  return roles.filter(
+    (r: { name: string }) => !['admin', 'super-admin'].includes(r.name),
+  )
+})
+
 const availablePersonals = computed(() => {
   const all = personalsData.value || []
   return all.filter((p) => !p.user_id)
 })
 
-// Formulaire : Créer utilisateur depuis un personnel académique
+/** Rôles autorisés par POST /admin/users */
+const directCreateRoles = computed(() => {
+  if (forceTiers.value) {
+    return [{ name: 'tiers', label: 'Tiers' }]
+  }
+  return [
+    { name: 'admin-ecole', label: 'Admin école' },
+    { name: 'tiers', label: 'Tiers' },
+  ]
+})
+
+const personnelRoleOptions = computed(() => {
+  if (forceTiers.value) {
+    return [{ name: 'tiers', label: 'Tiers' }]
+  }
+  if (availableRoles.value.length > 0) {
+    return availableRoles.value.map((r: { name: string }) => ({
+      name: r.name,
+      label: r.name.replace(/-/g, ' '),
+    }))
+  }
+  return [
+    { name: 'enseignant', label: 'Enseignant' },
+    { name: 'prefet', label: 'Préfet' },
+    { name: 'tiers', label: 'Tiers' },
+  ]
+})
+
+const editRoleOptions = computed(() => directCreateRoles.value)
+
+// Création directe
 const createOpen = ref(false)
+const createMode = ref<'direct' | 'personnel'>('direct')
+const createName = ref('')
+const createEmail = ref('')
+const createPassword = ref('')
+const createRole = ref('tiers')
+
 const selectedPersonalId = ref<number | string>('')
 const selectedPersonalRole = ref<string>('enseignant')
+
+function openCreateModal() {
+  createMode.value = 'direct'
+  createName.value = ''
+  createEmail.value = ''
+  createPassword.value = ''
+  createRole.value = forceTiers.value ? 'tiers' : 'tiers'
+  selectedPersonalId.value = ''
+  selectedPersonalRole.value = forceTiers.value ? 'tiers' : 'enseignant'
+  createOpen.value = true
+  fetchRoles()
+}
+
+async function onSubmitCreate() {
+  if (createMode.value === 'personnel') {
+    await onAssignPersonal()
+    return
+  }
+
+  const name = createName.value.trim()
+  const email = createEmail.value.trim()
+  const password = createPassword.value
+  const role = forceTiers.value ? 'tiers' : createRole.value
+
+  if (!name || !email || !password) {
+    showCustomToast({ message: 'Nom, email et mot de passe sont requis', type: 'error' })
+    return
+  }
+  if (password.length < 6) {
+    showCustomToast({ message: 'Le mot de passe doit contenir au moins 6 caractères', type: 'error' })
+    return
+  }
+
+  const payload: Record<string, unknown> = { name, email, password, role }
+  if (auth.userSchoolId) {
+    payload.school_id = Number(auth.userSchoolId)
+  }
+
+  await postData(API_ROUTES.CREATE_ADMIN_USER, payload)
+  if (createError.value) {
+    showCustomToast({ message: createError.value, type: 'error' })
+    return
+  }
+  showCustomToast({ message: 'Utilisateur créé avec succès', type: 'success' })
+  createOpen.value = false
+  eventBus.emit('usersUpdated')
+}
 
 async function onAssignPersonal() {
   if (!selectedPersonalId.value || !selectedPersonalRole.value) {
@@ -96,7 +188,7 @@ async function onAssignPersonal() {
   }
   const payload = {
     academic_personal_id: selectedPersonalId.value,
-    role: selectedPersonalRole.value,
+    role: forceTiers.value ? 'tiers' : selectedPersonalRole.value,
   }
   await postData(API_ROUTES.ASSIGN_ROLE_TO_PERSONAL, payload)
   if (createError.value) {
@@ -105,14 +197,8 @@ async function onAssignPersonal() {
   }
   showCustomToast({ message: 'Compte créé et email envoyé avec succès', type: 'success' })
   createOpen.value = false
-  resetForm()
-  fetchPersonals({ per_page: 500 }) // reload to remove the assigned one
+  fetchPersonals({ per_page: 500 })
   eventBus.emit('usersUpdated')
-}
-
-function resetForm() {
-  selectedPersonalId.value = ''
-  selectedPersonalRole.value = 'enseignant'
 }
 
 // Édition
@@ -121,13 +207,16 @@ const editId = ref<number | null>(null)
 const editName = ref('')
 const editEmail = ref('')
 const editRole = ref('')
+const editPassword = ref('')
 
 function openEditModal(u: AdminUser) {
   editId.value = u.id
   editName.value = u.name
   editEmail.value = u.email
   editRole.value = u.roles && u.roles.length > 0 ? u.roles[0].name : 'tiers'
+  editPassword.value = ''
   editOpen.value = true
+  fetchRoles()
 }
 
 async function onSubmitEdit() {
@@ -135,7 +224,17 @@ async function onSubmitEdit() {
   const payload: Record<string, string> = {
     name: editName.value.trim(),
     email: editEmail.value.trim(),
-    role: editRole.value,
+    role: forceTiers.value ? 'tiers' : editRole.value,
+  }
+  if (editPassword.value.trim()) {
+    if (editPassword.value.trim().length < 6) {
+      showCustomToast({
+        message: 'Le mot de passe doit contenir au moins 6 caractères',
+        type: 'error',
+      })
+      return
+    }
+    payload.password = editPassword.value.trim()
   }
   await putData(API_ROUTES.UPDATE_ADMIN_USER(editId.value), payload)
   if (updError.value) {
@@ -149,7 +248,6 @@ async function onSubmitEdit() {
   }
 }
 
-// Suppression
 const deletingId = ref<number | null>(null)
 
 async function onDeleteUser(id: number, name: string) {
@@ -164,12 +262,15 @@ async function onDeleteUser(id: number, name: string) {
   deletingId.value = null
 }
 
-import { watch } from 'vue'
-
 watch(createOpen, (newVal) => {
-  if (newVal) {
-    if (!rolesData.value || rolesData.value.length === 0) fetchRoles()
-    fetchPersonals({ per_page: 500 }) // Load personnel to assign
+  if (newVal && createMode.value === 'personnel') {
+    fetchPersonals({ per_page: 500 })
+  }
+})
+
+watch(createMode, (mode) => {
+  if (mode === 'personnel' && createOpen.value) {
+    fetchPersonals({ per_page: 500 })
   }
 })
 
@@ -218,7 +319,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Button v-if="canCreate" @click="createOpen = true">
+            <Button v-if="canCreate" @click="openCreateModal">
               <span class="iconify hugeicons--user-add-01"></span>
               <span>Nouvel utilisateur</span>
             </Button>
@@ -314,62 +415,6 @@ onBeforeUnmount(() => {
                     </TableRowActions>
                   </div>
                 </li>
-
-                <!-- Modal Édition (inline dans la liste comme Pays.vue) -->
-                <Dialog v-model:open="editOpen">
-                  <DialogContent class="sm:max-w-[420px]">
-                    <DialogHeader>
-                      <DialogTitle>Modifier un utilisateur</DialogTitle>
-                      <DialogDescription>Mettre à jour les informations</DialogDescription>
-                    </DialogHeader>
-                    <form @submit.prevent="onSubmitEdit">
-                      <div class="grid gap-4 py-4">
-                        <div class="flex flex-col space-y-1.5">
-                          <Label for="edit-name" class="text-sm font-medium">Nom complet</Label>
-                          <Input
-                            id="edit-name"
-                            v-model="editName"
-                            class="h-10"
-                            :disabled="updating"
-                            required
-                          />
-                        </div>
-                        <div class="flex flex-col space-y-1.5">
-                          <Label for="edit-email" class="text-sm font-medium">Email</Label>
-                          <Input
-                            id="edit-email"
-                            v-model="editEmail"
-                            type="email"
-                            class="h-10"
-                            :disabled="updating"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter class="flex justify-end gap-2 items-center">
-                        <Button
-                          size="sm"
-                          class="h-9"
-                          variant="outline"
-                          type="button"
-                          :disabled="updating"
-                          @click="editOpen = false"
-                          >Annuler</Button
-                        >
-                        <Button size="sm" class="h-9" type="submit" :disabled="updating">
-                          <span v-if="!updating" class="flex items-center gap-2">
-                            <span class="iconify hugeicons--floppy-disk"></span>
-                            <span>Enregistrer</span>
-                          </span>
-                          <span v-else class="flex items-center gap-2">
-                            <IconifySpinner size="lg" />
-                            <span>Mise à jour...</span>
-                          </span>
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
               </ul>
             </div>
           </template>
@@ -377,16 +422,166 @@ onBeforeUnmount(() => {
       </BoxPanelWrapper>
     </div>
 
+    <!-- Modal Édition -->
+    <Dialog v-model:open="editOpen">
+      <DialogContent class="sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>Modifier un utilisateur</DialogTitle>
+          <DialogDescription>Mettre à jour les informations et le rôle</DialogDescription>
+        </DialogHeader>
+        <form @submit.prevent="onSubmitEdit">
+          <div class="grid gap-4 py-4">
+            <div class="flex flex-col space-y-1.5">
+              <Label for="edit-name" class="text-sm font-medium">Nom complet</Label>
+              <Input id="edit-name" v-model="editName" class="h-10" :disabled="updating" required />
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label for="edit-email" class="text-sm font-medium">Email</Label>
+              <Input
+                id="edit-email"
+                v-model="editEmail"
+                type="email"
+                class="h-10"
+                :disabled="updating"
+                required
+              />
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label for="edit-role" class="text-sm font-medium">Rôle</Label>
+              <Select v-model="editRole" :disabled="updating || forceTiers">
+                <SelectTrigger class="w-full h-10">
+                  <SelectValue placeholder="Choisir un rôle..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="role in editRoleOptions"
+                    :key="role.name"
+                    :value="role.name"
+                  >
+                    <span class="capitalize">{{ role.label }}</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p v-if="forceTiers" class="text-xs text-foreground-muted">
+                En tant qu'admin école, seuls les comptes « tiers » sont autorisés.
+              </p>
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label for="edit-password" class="text-sm font-medium"
+                >Nouveau mot de passe (optionnel)</Label
+              >
+              <Input
+                id="edit-password"
+                v-model="editPassword"
+                type="password"
+                class="h-10"
+                :disabled="updating"
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
+          <DialogFooter class="flex justify-end gap-2 items-center">
+            <Button
+              size="sm"
+              class="h-9"
+              variant="outline"
+              type="button"
+              :disabled="updating"
+              @click="editOpen = false"
+              >Annuler</Button
+            >
+            <Button size="sm" class="h-9" type="submit" :disabled="updating">
+              <span v-if="!updating" class="flex items-center gap-2">
+                <span class="iconify hugeicons--floppy-disk"></span>
+                <span>Enregistrer</span>
+              </span>
+              <span v-else class="flex items-center gap-2">
+                <IconifySpinner size="lg" />
+                <span>Mise à jour...</span>
+              </span>
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+
     <!-- Modal Création -->
     <Dialog v-model:open="createOpen">
       <DialogContent class="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Créer un compte utilisateur</DialogTitle>
-          <DialogDescription>Générer un compte de connexion pour un membre de l'école</DialogDescription>
+          <DialogTitle>Créer un utilisateur</DialogTitle>
+          <DialogDescription>Compte de connexion pour l'école</DialogDescription>
         </DialogHeader>
 
-        <form @submit.prevent="onAssignPersonal">
-          <div class="grid gap-4 py-4">
+        <div class="flex gap-2 mb-2">
+          <Button
+            type="button"
+            size="sm"
+            :variant="createMode === 'direct' ? 'default' : 'outline'"
+            @click="createMode = 'direct'"
+          >
+            Compte manuel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            :variant="createMode === 'personnel' ? 'default' : 'outline'"
+            @click="createMode = 'personnel'"
+          >
+            Depuis un personnel
+          </Button>
+        </div>
+
+        <form @submit.prevent="onSubmitCreate">
+          <div v-if="createMode === 'direct'" class="grid gap-4 py-4">
+            <div class="flex flex-col space-y-1.5">
+              <Label for="create-name">Nom complet</Label>
+              <Input id="create-name" v-model="createName" class="h-10" required :disabled="creating" />
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label for="create-email">Email</Label>
+              <Input
+                id="create-email"
+                v-model="createEmail"
+                type="email"
+                class="h-10"
+                required
+                :disabled="creating"
+              />
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label for="create-password">Mot de passe</Label>
+              <Input
+                id="create-password"
+                v-model="createPassword"
+                type="password"
+                class="h-10"
+                required
+                minlength="6"
+                :disabled="creating"
+                autocomplete="new-password"
+              />
+            </div>
+            <div class="flex flex-col space-y-1.5">
+              <Label>Rôle</Label>
+              <Select v-model="createRole" :disabled="creating || forceTiers">
+                <SelectTrigger class="w-full h-10">
+                  <SelectValue placeholder="Choisir un rôle..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="role in directCreateRoles"
+                    :key="role.name"
+                    :value="role.name"
+                  >
+                    <span class="capitalize">{{ role.label }}</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div v-else class="grid gap-4 py-4">
             <div class="flex flex-col space-y-1.5">
               <Label class="text-sm font-medium">Sélectionner le personnel</Label>
               <Select v-model="selectedPersonalId" :disabled="creating">
@@ -395,34 +590,52 @@ onBeforeUnmount(() => {
                 </SelectTrigger>
                 <SelectContent class="max-h-[200px]">
                   <SelectItem v-for="p in availablePersonals" :key="p.id" :value="String(p.id)">
-                    {{ p.pre_name }} {{ p.name }} {{ p.post_name }} - {{ p.fonction?.name || 'Sans fonction' }}
+                    {{ p.pre_name }} {{ p.name }} {{ p.post_name }} -
+                    {{ p.fonction?.name || 'Sans fonction' }}
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <p class="text-xs text-foreground-muted mt-1">Seuls les personnels sans compte s'affichent ici.</p>
+              <p class="text-xs text-foreground-muted mt-1">
+                Seuls les personnels sans compte s'affichent ici.
+              </p>
             </div>
             <div class="flex flex-col space-y-1.5 mt-2">
               <Label class="text-sm font-medium">Rôle à attribuer</Label>
-              <Select v-model="selectedPersonalRole" :disabled="creating">
+              <Select v-model="selectedPersonalRole" :disabled="creating || forceTiers">
                 <SelectTrigger class="w-full h-10">
                   <SelectValue placeholder="Choisir un rôle..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="role in availableRoles" :key="role.id" :value="role.name">
-                    <span class="capitalize">{{ role.name.replace('-', ' ') }}</span>
+                  <SelectItem
+                    v-for="role in personnelRoleOptions"
+                    :key="role.name"
+                    :value="role.name"
+                  >
+                    <span class="capitalize">{{ role.label }}</span>
                   </SelectItem>
-                  <!-- Fallback s'il n'y a pas de données -->
-                  <SelectItem v-if="availableRoles.length === 0" value="enseignant">Enseignant</SelectItem>
-                  <SelectItem v-if="availableRoles.length === 0" value="prefet">Préfet</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
           <DialogFooter class="flex justify-end gap-2 items-center mt-4">
-            <Button size="sm" class="h-9" variant="outline" type="button" :disabled="creating" @click="createOpen = false">Annuler</Button>
+            <Button
+              size="sm"
+              class="h-9"
+              variant="outline"
+              type="button"
+              :disabled="creating"
+              @click="createOpen = false"
+              >Annuler</Button
+            >
             <Button size="sm" class="h-9" type="submit" :disabled="creating">
-              <span v-if="!creating" class="flex items-center gap-2"><span class="iconify hugeicons--user-add-01"></span><span>Créer un compte</span></span>
-              <span v-else class="flex items-center gap-2"><IconifySpinner size="lg" /><span>Création...</span></span>
+              <span v-if="!creating" class="flex items-center gap-2"
+                ><span class="iconify hugeicons--user-add-01"></span
+                ><span>Créer</span></span
+              >
+              <span v-else class="flex items-center gap-2"
+                ><IconifySpinner size="lg" /><span>Création...</span></span
+              >
             </Button>
           </DialogFooter>
         </form>

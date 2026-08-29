@@ -1,6 +1,5 @@
 @php
     use App\Models\School;
-    use App\Models\SousDivision;
     use App\Services\Organization\SchoolScopeResolver;
 
     $resolver = app(SchoolScopeResolver::class);
@@ -11,34 +10,10 @@
         $schoolsQuery->whereIn('id', $allowedIds);
     }
     $schools = $schoolsQuery->get(['id', 'name']);
-
-    $sousDivisions = collect();
-    if ($user?->hasRole('admin-proved') && $user->proved_id) {
-        $sousDivisions = SousDivision::query()
-            ->where('proved_id', $user->proved_id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'code']);
-    }
 @endphp
 
 @if($user?->hasAnyRole(['super-admin', 'admin-proved', 'admin-sous-division']))
-    @if($sousDivisions->isNotEmpty())
-        <div class="mb-2 px-1">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Sous-division</p>
-            <div class="flex flex-wrap gap-1">
-                <a href="{{ route('admin.sous-division.switch', 'all') }}"
-                    class="rounded-md px-2 py-1 text-[10px] font-bold {{ !session('selected_sous_division_id') ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-600' }}">
-                    Toutes
-                </a>
-                @foreach($sousDivisions as $sd)
-                    <a href="{{ route('admin.sous-division.switch', $sd->id) }}"
-                        class="rounded-md px-2 py-1 text-[10px] font-bold truncate max-w-[8rem] {{ (int) session('selected_sous_division_id') === (int) $sd->id ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-600' }}">
-                        {{ $sd->code }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    @endif
+    {{-- Sous-division switcher masqué : flux produit centré sur l'école --}}
 
     <div x-data="{ open: false, schoolSearch: '' }" class="relative">
         <button @click="open = !open" type="button"

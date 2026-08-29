@@ -167,6 +167,9 @@ export const API_ROUTES = {
 
   //school years
   GET_SCHOOL_YEARS: 'school/years',
+  CREATE_SCHOOL_YEAR: 'school/years',
+  UPDATE_SCHOOL_YEAR: (id: number | string) => `school/years/${id}`,
+  DELETE_SCHOOL_YEAR: (id: number | string) => `school/years/${id}`,
   ACTIVATE_SCHOOL_YEAR: (id: number | string) => `school/years/${id}/activate`,
 
   //Semester

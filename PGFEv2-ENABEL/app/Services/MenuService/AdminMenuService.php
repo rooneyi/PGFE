@@ -31,17 +31,9 @@ final class AdminMenuService
             ]),
         ];
 
-        // admin-proved : menu permanent (pas de drill-down module)
+        // admin-proved : menu permanent (pas de drill-down module) — écoles uniquement (sous-divisions masquées)
         if ($user && $user->hasRole('admin-proved') && ! $user->hasRole('super-admin')) {
             $groups['Organisation'] = [
-                new AdminMenuItem([
-                    'id' => 'sous-divisions',
-                    'label' => 'Sous-divisions',
-                    'icon' => 'lucide:network',
-                    'route' => $this->getRouteWithContext('admin.sous-divisions.index'),
-                    'active' => $this->isCurrentRoutePrefixed('admin.sous-divisions.')
-                        || $this->isCurrentRoutePrefixed('admin.sous-division.'),
-                ]),
                 new AdminMenuItem([
                     'id' => 'organisation-schools',
                     'label' => 'Écoles',
@@ -74,25 +66,6 @@ final class AdminMenuService
 
         if ($user && $user->hasAnyRole(['super-admin', 'admin-sous-division'])) {
             $organisationItems = [];
-
-            if ($user->hasRole('super-admin')) {
-                $organisationItems[] = new AdminMenuItem([
-                    'id' => 'proveds',
-                    'label' => 'Proved',
-                    'icon' => 'lucide:landmark',
-                    'route' => $this->getRouteWithContext('admin.proveds.index'),
-                    'active' => $this->isCurrentRoutePrefixed('admin.proveds.'),
-                ]);
-            }
-
-            $organisationItems[] = new AdminMenuItem([
-                'id' => 'sous-divisions',
-                'label' => 'Sous-divisions',
-                'icon' => 'lucide:network',
-                'route' => $this->getRouteWithContext('admin.sous-divisions.index'),
-                'active' => $this->isCurrentRoutePrefixed('admin.sous-divisions.')
-                    || $this->isCurrentRoutePrefixed('admin.sous-division.'),
-            ]);
 
             $organisationItems[] = new AdminMenuItem([
                 'id' => 'organisation-schools',
@@ -777,7 +750,7 @@ final class AdminMenuService
 
         $definitions = [
             'Administration' => ['icon' => 'lucide:globe-2', 'url' => 'admin.countries.index'],
-            'Organisation' => ['icon' => 'lucide:network', 'url' => 'admin.sous-divisions.index'],
+            'Organisation' => ['icon' => 'mdi:school', 'url' => 'admin.schools.index'],
             'Collecte rapide' => ['icon' => 'lucide:clipboard-list', 'url' => 'admin.collecte-rapides.index'],
             'Écoles' => ['icon' => 'mdi:school', 'url' => 'admin.schools.index'],
             'Élèves' => ['icon' => 'lucide:graduation-cap', 'url' => 'admin.students.index'],

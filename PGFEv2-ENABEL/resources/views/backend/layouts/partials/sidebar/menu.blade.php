@@ -99,16 +99,11 @@
 
     <div class="mt-auto border-t border-zinc-200/80 bg-white/50 p-4 backdrop-blur-sm">
         @if($isProvedOnly)
-            <div class="mb-3 grid grid-cols-2 gap-2">
-                <a href="{{ route('admin.sous-divisions.create') }}"
-                   class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-violet-800 hover:bg-violet-100">
-                    <iconify-icon icon="lucide:plus" width="12"></iconify-icon>
-                    SD
-                </a>
+            <div class="mb-3">
                 <a href="{{ route('admin.schools.create') }}"
-                   class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-800 hover:bg-amber-100">
+                   class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-800 hover:bg-amber-100">
                     <iconify-icon icon="lucide:plus" width="12"></iconify-icon>
-                    École
+                    Nouvelle école
                 </a>
             </div>
         @endif
