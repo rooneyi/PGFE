@@ -5,7 +5,6 @@
     <form method="POST" action="{{ route('admin.schools.update', $school) }}" enctype="multipart/form-data" class="space-y-6 max-w-3xl">
         @csrf @method('PUT')
         <div class="grid gap-6 sm:grid-cols-2">
-            @include('backend.pages.schools._sous_division_field', ['school' => $school])
             <div class="sm:col-span-2">
                 <label class="block text-sm font-medium mb-1" for="name">Nom <span class="text-red-600">*</span></label>
                 <input type="text" name="name" id="name" value="{{ old('name', $school->name) }}" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm" required />

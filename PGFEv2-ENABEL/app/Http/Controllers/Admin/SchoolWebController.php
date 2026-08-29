@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
-use App\Models\SousDivision;
 use App\Services\Organization\SchoolScopeResolver;
 use Illuminate\Http\Request;
 
@@ -47,10 +46,9 @@ final class SchoolWebController extends Controller
     {
         $countries = \App\Models\Country::query()->orderBy('name')->get(['id', 'name']);
         $types = \App\Models\Type::query()->orderBy('title')->get(['id', 'title']);
-        $sousDivisions = $this->sousDivisionsForUser($request->user());
         $school = new School;
 
-        return view('backend.pages.schools.create', compact('countries', 'types', 'sousDivisions', 'school'));
+        return view('backend.pages.schools.create', compact('countries', 'types', 'school'));
     }
 
     public function store(Request $request, SchoolScopeResolver $resolver)
@@ -67,7 +65,7 @@ final class SchoolWebController extends Controller
             'latitude' => ['nullable', 'string', 'max:100'],
             'longitude' => ['nullable', 'string', 'max:100'],
             'logo' => ['nullable', 'file', 'image', 'max:1024'],
-            'sous_division_id' => ['required', 'integer', 'exists:sous_divisions,id'],
+            'sous_division_id' => ['nullable', 'integer', 'exists:sous_divisions,id'],
         ];
 
         $data = $request->validate($rules);
@@ -89,9 +87,8 @@ final class SchoolWebController extends Controller
 
         $countries = \App\Models\Country::query()->orderBy('name')->get(['id', 'name']);
         $types = \App\Models\Type::query()->orderBy('title')->get(['id', 'title']);
-        $sousDivisions = $this->sousDivisionsForUser($request->user());
 
-        return view('backend.pages.schools.edit', compact('school', 'countries', 'types', 'sousDivisions'));
+        return view('backend.pages.schools.edit', compact('school', 'countries', 'types'));
     }
 
     public function update(Request $request, School $school, SchoolScopeResolver $resolver)
@@ -110,7 +107,7 @@ final class SchoolWebController extends Controller
             'latitude' => ['nullable', 'string', 'max:100'],
             'longitude' => ['nullable', 'string', 'max:100'],
             'logo' => ['nullable', 'file', 'image', 'max:1024'],
-            'sous_division_id' => ['required', 'integer', 'exists:sous_divisions,id'],
+            'sous_division_id' => ['nullable', 'integer', 'exists:sous_divisions,id'],
         ];
 
         $data = $request->validate($rules);
@@ -144,19 +141,5 @@ final class SchoolWebController extends Controller
         }
 
         return back();
-    }
-
-    /** @return \Illuminate\Database\Eloquent\Collection<int, SousDivision> */
-    private function sousDivisionsForUser(?\App\Models\User $user): \Illuminate\Database\Eloquent\Collection
-    {
-        $query = SousDivision::query()->with('proved:id,name,code')->orderBy('name');
-
-        if ($user?->hasRole('admin-proved') && $user->proved_id) {
-            $query->where('proved_id', $user->proved_id);
-        } elseif ($user?->hasRole('admin-sous-division') && $user->sous_division_id) {
-            $query->whereKey($user->sous_division_id);
-        }
-
-        return $query->get(['id', 'name', 'code', 'proved_id']);
     }
 }

@@ -87,6 +87,9 @@ final class SchoolScopeResolver
                 abort_unless($this->canAccessSousDivision($sousDivisionId, $user), 403);
             }
             $data['sous_division_id'] = $sousDivisionId;
+        } else {
+            // Optional on create/update: omit or leave null without forcing a value.
+            unset($data['sous_division_id']);
         }
 
         return $data;

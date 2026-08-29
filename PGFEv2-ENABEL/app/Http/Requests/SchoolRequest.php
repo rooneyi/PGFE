@@ -36,7 +36,7 @@ final class SchoolRequest extends FormRequest
                 'unique:schools,email,'.$this->school?->id,
             ],
             'type_id' => ['required', 'exists:types,id'],
-            'sous_division_id' => ['required', 'integer', 'exists:sous_divisions,id'],
+            'sous_division_id' => ['nullable', 'integer', 'exists:sous_divisions,id'],
             'logo' => ['nullable', 'image', 'max:2048'], // 2MB max
         ];
     }
@@ -56,7 +56,6 @@ final class SchoolRequest extends FormRequest
             'email.email' => 'L\'email n\'est pas valide',
             'email.unique' => 'Cet email existe déjà',
             'type_id.required' => 'Le type est requis',
-            'sous_division_id.required' => 'La sous-division est requise',
             'sous_division_id.exists' => 'La sous-division sélectionnée n\'existe pas',
             'logo.image' => 'Le logo doit être une image',
             'logo.max' => 'Le logo ne doit pas dépasser 2MB',
