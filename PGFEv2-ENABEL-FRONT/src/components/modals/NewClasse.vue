@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -34,7 +34,7 @@ import ListSchool from '@/utils/widgets/vues/ListSchool.vue'
 import IconifySpinner from '../ui/spinner/IconifySpinner.vue'
 
 import { useGetApi } from '@/composables/useGetApi'
-import SpanRequired from '@/components/atoms/SpanRequired.vue'
+const NONE_TITULAIRE = 'none'
 
 const { loading, error, response, postData, success } = usePostApi()
 const {
@@ -45,9 +45,11 @@ const {
   success: successPut,
 } = usePutApi()
 
-const { data: personnels, fetchData: fetchPersonnels } = useGetApi<any[]>(
-  API_ROUTES.GET_ACADEMIC_PERSONALS,
-)
+const {
+  data: personnels,
+  fetchData: fetchPersonnels,
+  lastResponseRaw: personnelsRaw,
+} = useGetApi<any[]>(API_ROUTES.GET_ACADEMIC_PERSONALS)
 const { data: filieresData, fetchData: fetchFilieres } = useGetApi(API_ROUTES.GET_FILLIERES)
 import { useAcademicLevels } from '@/composables/useAcademicLevels'
 const selectedFiliereId = ref<string | null>(null)
@@ -70,7 +72,7 @@ eventBus.on('editClassRoom', async (item: any) => {
     const formData = {
       name: rawItem.name || '',
       academic_level_id: Number(rawItem.academic_level_id || 0),
-      titulaire_id: rawItem.titulaire_id ? String(rawItem.titulaire_id) : '',
+      titulaire_id: rawItem.titulaire_id ? String(rawItem.titulaire_id) : NONE_TITULAIRE,
       indicator: rawItem.indicator || '',
     }
     setValues(formData as any)
@@ -85,6 +87,14 @@ onMounted(() => {
   loadLevels()
 })
 
+watch(open, (isOpen) => {
+  if (isOpen) {
+    fetchPersonnels()
+    fetchFilieres()
+    loadLevels()
+  }
+})
+
 const filieres = computed(() => {
   const v = filieresData.value
   if (Array.isArray(v)) return v
@@ -92,19 +102,32 @@ const filieres = computed(() => {
   return []
 })
 
+const extractList = (raw: any): any[] => {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw
+  if (Array.isArray(raw?.data)) return raw.data
+  if (Array.isArray(raw?.data?.data)) return raw.data.data
+  return []
+}
+
+const normalizeTitulaireId = (value: unknown): string | null => {
+  const v = String(value ?? '').trim()
+  if (!v || v === NONE_TITULAIRE) return null
+  return v
+}
+
 // Liste des personnels unique et formatée pour le Select Titulaire
 const uniquePersonnels = computed(() => {
-  // Normalise la réponse: peut être un tableau direct ou un objet { data: [...] }
-  const raw = personnels?.value as any
-  const list: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+  const list = [
+    ...extractList(personnels?.value),
+    ...extractList(personnelsRaw?.value),
+  ]
 
   const map = new Map<string, { id: string; label: string }>()
   for (const p of list) {
-    // Certains enregistrements utilisent `id`, d'autres `user_id`.
-    const id = String(p?.id ?? p?.user_id ?? '').trim()
-    if (!id) continue
+    const id = String(p?.id ?? p?.user_id ?? p?.academic_personal_id ?? '').trim()
+    if (!id || id === NONE_TITULAIRE) continue
 
-    // Construire un label lisible: privilégier pre_name/post_name puis name
     const pre = String(p?.pre_name || p?.post_name || '').trim()
     const name = String(p?.name || '').trim()
     const label = [pre, name].filter(Boolean).join(' ').trim() || `ID ${id}`
@@ -122,10 +145,7 @@ const schemaForm = z.object({
   name: z.string({ required_error: 'Veuillez saisir le nom de la classe' }).min(2).max(100),
 
   academic_level_id: z.coerce.number({ required_error: 'Veuillez sélectionner un niveau' }),
-  titulaire_id: z
-    .union([z.string().min(1), z.literal('')])
-    .optional()
-    .default(''),
+  titulaire_id: z.string().optional(),
   indicator: z
     .union([
       z.string().regex(/^[A-Z]$/, "L'indicateur doit être une seule lettre majuscule (A–Z)"),
@@ -137,6 +157,9 @@ const schemaForm = z.object({
 
 const { handleSubmit, resetForm, setValues } = useForm({
   validationSchema: toTypedSchema(schemaForm),
+  initialValues: {
+    titulaire_id: NONE_TITULAIRE,
+  },
 })
 const { value: name, errorMessage: nameError } = useField<string>('name')
 
@@ -148,7 +171,11 @@ const { value: indicator, errorMessage: indicatorError } = useField<string>('ind
 const onSubmit = handleSubmit(async (values) => {
   try {
     const normalizedIndicator = String(values.indicator || '').toUpperCase()
-    const payload = { ...values, indicator: normalizedIndicator }
+    const payload = {
+      ...values,
+      indicator: normalizedIndicator,
+      titulaire_id: normalizeTitulaireId(values.titulaire_id),
+    }
     if (isEditing.value && editingItem.value) {
       // Mode édition
       const url = API_ROUTES.UPDATE_CLASSROOM.replace(':classroom', String(editingItem.value.id))
@@ -330,14 +357,15 @@ const handleOpenChange = (isOpen: boolean) => {
           <div class="flex flex-col space-y-1.5 flex-1">
             <Label for="titulaire_id" class="text-sm font-medium">
               Titulaire
-              <SpanRequired />
+              <span class="text-xs font-normal text-muted-foreground"> (optionnel)</span>
             </Label>
             <Select id="titulaire_id" name="titulaire_id" v-model="titulaire_id">
               <SelectTrigger id="titulaire_id" class="h-10 w-full">
-                <SelectValue placeholder="Sélectionnez un titulaire" />
+                <SelectValue placeholder="Aucun — à assigner plus tard" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
+                  <SelectItem :value="NONE_TITULAIRE">Aucun — à assigner plus tard</SelectItem>
                   <SelectItem v-for="p in uniquePersonnels" :key="p.id" :value="String(p.id)">
                     {{ p.label }}
                   </SelectItem>

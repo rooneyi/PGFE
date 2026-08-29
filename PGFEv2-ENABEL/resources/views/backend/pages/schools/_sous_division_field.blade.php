@@ -7,7 +7,7 @@
 @if($showField)
     <div class="sm:col-span-2">
         <label class="block text-sm font-medium mb-1" for="sous_division_id">
-            Sous-division <span class="text-red-600">*</span>
+            Sous-division
         </label>
         @if($lockedSd)
             <input type="hidden" name="sous_division_id" value="{{ auth()->user()->sous_division_id }}" />
@@ -18,13 +18,12 @@
                 @endif
             </p>
         @elseif($sousDivisions->isEmpty())
-            <p class="text-sm text-amber-700 dark:text-amber-300 py-2 px-3 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                Aucune sous-division disponible. Créez-en une dans
-                <a href="{{ route('admin.sous-divisions.index') }}" class="font-semibold underline">Organisation → Sous-divisions</a>
-                avant d’ajouter une école.
+            <p class="text-sm text-gray-600 dark:text-gray-300 py-2 px-3 rounded-md bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                Aucune sous-division disponible. Vous pouvez enregistrer l’école sans en choisir une, ou en créer une dans
+                <a href="{{ route('admin.sous-divisions.index') }}" class="font-semibold underline">Organisation → Sous-divisions</a>.
             </p>
         @else
-            <select name="sous_division_id" id="sous_division_id" required class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm">
+            <select name="sous_division_id" id="sous_division_id" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm">
                 <option value="">— Sélectionner —</option>
                 @foreach($sousDivisions as $sd)
                     <option value="{{ $sd->id }}" @selected((int) $selectedId === (int) $sd->id)>

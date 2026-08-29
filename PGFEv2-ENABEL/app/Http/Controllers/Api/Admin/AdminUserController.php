@@ -9,11 +9,24 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 final class AdminUserController extends Controller
 {
+    /** Rôles d'agents d'école que super-admin / admin peuvent créer. */
+    private const SCHOOL_AGENT_ROLES = [
+        'admin-ecole',
+        'enseignant',
+        'comptable',
+        'stoker',
+        'rh',
+        'inspecteur',
+        'disciplinaire',
+        'prefet',
+        'tiers',
+    ];
+
     public function index()
     {
         /** @var User|null $current */
@@ -24,9 +37,7 @@ final class AdminUserController extends Controller
 
         $query = User::with('roles');
 
-        // Super-admin global : voit tous les utilisateurs
-        // Autres rôles : limités à leur école
-        if (! $this->canCreateAny($current)) {
+        if (! $this->canCreateSchoolAgents($current)) {
             $schoolId = $current->school_id;
             if ($schoolId) {
                 $query->where('school_id', $schoolId);
@@ -38,19 +49,16 @@ final class AdminUserController extends Controller
 
     public function store(Request $request)
     {
-        // Règles:
-        // super-admin / users.create.any : peut créer admin-ecole & tiers
-        // admin-ecole / users.create.tiers : peut créer uniquement tiers
         /** @var User|null $current */
         $current = Auth::user();
         if (! $current) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        $canCreateAny = $this->canCreateAny($current);
+        $canCreateAgents = $this->canCreateSchoolAgents($current);
         $canCreateTiers = $this->canCreateTiers($current);
 
-        if (! $canCreateAny && ! $canCreateTiers) {
+        if (! $canCreateAgents && ! $canCreateTiers) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -58,31 +66,29 @@ final class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'string', 'min:6'],
-            'role' => ['nullable', 'string', Rule::in(['admin-ecole', 'tiers', 'admin'])],
+            'role' => ['nullable', 'string', Rule::in(self::SCHOOL_AGENT_ROLES)],
             'school_id' => ['sometimes', 'integer', 'exists:schools,id'],
         ]);
 
         $role = $data['role'] ?? 'tiers';
 
-        // Créateurs limités : uniquement « tiers »
-        if (! $canCreateAny) {
+        if (! $canCreateAgents) {
             if (in_array($role, ['admin', 'admin-ecole', 'super-admin'], true)) {
                 return response()->json(['message' => 'Non autorisé à créer ce type d\'utilisateur'], 403);
             }
             $role = 'tiers';
         }
 
-        // Interdiction de créer un admin / super-admin via cette API
         if (in_array($role, ['admin', 'super-admin'], true)) {
             return response()->json(['message' => 'Création d\'un second admin via API restreinte'], 403);
         }
 
-        $newUserSchoolId = $this->resolveSchoolIdForCreate($current, $data, $canCreateAny);
+        $newUserSchoolId = $this->resolveSchoolIdForCreate($current, $data, $canCreateAgents);
 
         $payload = [
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => $data['password'],
         ];
 
         if ($newUserSchoolId !== null) {
@@ -90,6 +96,7 @@ final class AdminUserController extends Controller
         }
 
         $user = User::create($payload);
+        Role::findOrCreate($role, 'web');
         $user->assignRole($role);
 
         return response()->json($user->load('roles'), 201);
@@ -107,15 +114,14 @@ final class AdminUserController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['sometimes', 'string', 'min:6'],
-            'role' => ['sometimes', 'string'],
+            'role' => ['sometimes', 'string', Rule::in(self::SCHOOL_AGENT_ROLES)],
             'school_id' => ['sometimes', 'integer', 'exists:schools,id'],
         ]);
 
-        $canCreateAny = $this->canCreateAny($current);
+        $canCreateAgents = $this->canCreateSchoolAgents($current);
 
         if (isset($data['role'])) {
-            // admin-ecole / créateurs tiers : uniquement vers tiers
-            if (! $canCreateAny) {
+            if (! $canCreateAgents) {
                 if ($data['role'] !== 'tiers') {
                     return response()->json(['message' => 'Non autorisé (modification rôle)'], 403);
                 }
@@ -123,46 +129,32 @@ final class AdminUserController extends Controller
                     return response()->json(['message' => 'Non autorisé (cible admin)'], 403);
                 }
             }
-            // Interdiction d'attribuer le rôle admin/super-admin ici
             if (in_array($data['role'], ['admin', 'super-admin'], true) && ! $user->hasRole($data['role'])) {
                 return response()->json(['message' => 'Promotion admin interdite ici'], 403);
             }
+            Role::findOrCreate($data['role'], 'web');
             $user->syncRoles([$data['role']]);
             unset($data['role']);
         }
 
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        }
-
         if (array_key_exists('school_id', $data)) {
-            if (! $canCreateAny && ! $current->hasRole('admin')) {
+            if (! $canCreateAgents) {
                 return response()->json(['message' => 'Non autorisé à modifier l\'école'], 403);
             }
             $user->school_id = $data['school_id'];
             unset($data['school_id']);
-        } elseif (isset($data['role']) && $data['role'] === 'admin-ecole' && $current->hasRole('admin-ecole')) {
-            $user->school_id = $current->school_id;
         }
 
         $user->update($data);
 
-        if (isset($user->school_id)) {
-            $user->save();
-        }
-
-        return response()->json($user->load('roles'));
+        return response()->json($user->fresh()->load('roles'));
     }
 
-    /**
-     * Assign or change the school for a user. Only accessible by global admins.
-     * PATCH /api/v1/admin/users/{user}/school
-     */
     public function assignSchool(Request $request, User $user)
     {
         /** @var User|null $current */
         $current = Auth::user();
-        if (! $current || (! $this->canCreateAny($current) && ! $current->hasRole('admin'))) {
+        if (! $current || ! $this->canCreateSchoolAgents($current)) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -188,7 +180,7 @@ final class AdminUserController extends Controller
         if (! $current || (! $current->can('users.delete') && ! $this->isAdminActor($current))) {
             return response()->json(['message' => 'Non autorisé'], Response::HTTP_FORBIDDEN);
         }
-        if ($user->hasAnyRole(['admin', 'super-admin']) && ! $this->canCreateAny($current)) {
+        if ($user->hasAnyRole(['admin', 'super-admin']) && ! $this->canCreateSchoolAgents($current)) {
             return response()->json(['message' => 'Interdit de supprimer un admin'], Response::HTTP_FORBIDDEN);
         }
         $user->delete();
@@ -196,9 +188,10 @@ final class AdminUserController extends Controller
         return response()->json(['message' => 'Utilisateur supprimé']);
     }
 
-    private function canCreateAny(User $user): bool
+    private function canCreateSchoolAgents(User $user): bool
     {
-        return $user->can('users.create.any') || $user->hasRole('super-admin');
+        return $user->can('users.create.any')
+            || $user->hasAnyRole(['super-admin', 'admin']);
     }
 
     private function canCreateTiers(User $user): bool
@@ -215,9 +208,9 @@ final class AdminUserController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
-    private function resolveSchoolIdForCreate(User $current, array $data, bool $canCreateAny): ?int
+    private function resolveSchoolIdForCreate(User $current, array $data, bool $canCreateAgents): ?int
     {
-        if ($current->hasRole('admin-ecole') || ! $canCreateAny) {
+        if ($current->hasRole('admin-ecole') || ! $canCreateAgents) {
             return $current->school_id !== null ? (int) $current->school_id : null;
         }
 

@@ -17,6 +17,18 @@ final class ClassroomRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('titulaire_id')) {
+            return;
+        }
+
+        $value = $this->input('titulaire_id');
+        if ($value === '' || $value === 'none' || $value === '0' || $value === 0 || $value === null) {
+            $this->merge(['titulaire_id' => null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -61,6 +73,7 @@ final class ClassroomRequest extends FormRequest
             'academic_level_id.exists' => 'Le niveau académique sélectionné n\'existe pas',
             'name.required' => 'Le nom de la classe est requis',
             'name.unique' => 'Cette classe existe déjà pour ce niveau académique',
+            'titulaire_id.exists' => "Le titulaire sélectionné n'existe pas",
         ];
     }
 }
