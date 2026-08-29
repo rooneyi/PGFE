@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SchoolRequest;
 use App\Models\School;
 use App\Services\Organization\SchoolScopeResolver;
 use Illuminate\Http\Request;
@@ -54,13 +55,22 @@ final class SchoolWebController extends Controller
     public function store(Request $request, SchoolScopeResolver $resolver)
     {
         $user = $request->user();
+
+        if ($request->filled('phone_number')) {
+            $request->merge([
+                'phone_number' => SchoolRequest::normalizeDrcPhone((string) $request->input('phone_number')),
+            ]);
+        } else {
+            $request->merge(['phone_number' => null]);
+        }
+
         $rules = [
             'name' => ['required', 'string', 'max:255', 'unique:schools,name'],
             'city' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
             'country_id' => ['required', 'exists:countries,id'],
             'type_id' => ['required', 'exists:types,id'],
-            'phone_number' => ['nullable', 'string', 'max:50', 'unique:schools,phone_number'],
+            'phone_number' => ['nullable', 'string', 'regex:/^\+243[0-9]{9}$/', 'unique:schools,phone_number'],
             'email' => ['nullable', 'email', 'max:255', 'unique:schools,email'],
             'latitude' => ['nullable', 'string', 'max:100'],
             'longitude' => ['nullable', 'string', 'max:100'],
@@ -68,7 +78,10 @@ final class SchoolWebController extends Controller
             'sous_division_id' => ['nullable', 'integer', 'exists:sous_divisions,id'],
         ];
 
-        $data = $request->validate($rules);
+        $data = $request->validate($rules, [
+            'phone_number.regex' => 'Numéro invalide. Utilisez +243 suivi de 9 chiffres (ex. +243812345678) ou le format local 0XXXXXXXXX.',
+            'phone_number.unique' => 'Ce numéro de téléphone existe déjà',
+        ]);
         $data = $resolver->applySousDivisionToSchoolData($data, $user);
 
         if ($request->hasFile('logo')) {
@@ -96,13 +109,22 @@ final class SchoolWebController extends Controller
         abort_unless($resolver->canAccessSchool($school->id, $request->user()), 403);
 
         $user = $request->user();
+
+        if ($request->filled('phone_number')) {
+            $request->merge([
+                'phone_number' => SchoolRequest::normalizeDrcPhone((string) $request->input('phone_number')),
+            ]);
+        } else {
+            $request->merge(['phone_number' => null]);
+        }
+
         $rules = [
             'name' => ['required', 'string', 'max:255', 'unique:schools,name,'.$school->id],
             'city' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
             'country_id' => ['required', 'exists:countries,id'],
             'type_id' => ['required', 'exists:types,id'],
-            'phone_number' => ['nullable', 'string', 'max:50', 'unique:schools,phone_number,'.$school->id],
+            'phone_number' => ['nullable', 'string', 'regex:/^\+243[0-9]{9}$/', 'unique:schools,phone_number,'.$school->id],
             'email' => ['nullable', 'email', 'max:255', 'unique:schools,email,'.$school->id],
             'latitude' => ['nullable', 'string', 'max:100'],
             'longitude' => ['nullable', 'string', 'max:100'],
@@ -110,7 +132,10 @@ final class SchoolWebController extends Controller
             'sous_division_id' => ['nullable', 'integer', 'exists:sous_divisions,id'],
         ];
 
-        $data = $request->validate($rules);
+        $data = $request->validate($rules, [
+            'phone_number.regex' => 'Numéro invalide. Utilisez +243 suivi de 9 chiffres (ex. +243812345678) ou le format local 0XXXXXXXXX.',
+            'phone_number.unique' => 'Ce numéro de téléphone existe déjà',
+        ]);
         $data = $resolver->applySousDivisionToSchoolData($data, $user);
 
         if ($request->hasFile('logo')) {

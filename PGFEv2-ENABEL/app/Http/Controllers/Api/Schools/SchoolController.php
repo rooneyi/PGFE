@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SchoolRequest;
 use App\Models\School;
 use App\Services\Organization\SchoolScopeResolver;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -70,10 +71,16 @@ final class SchoolController extends Controller
 
     public function destroy(School $school): JsonResponse
     {
-        if ($school->logo) {
-            Storage::delete($school->logo);
+        try {
+            if ($school->logo) {
+                Storage::disk('public')->delete($school->logo);
+            }
+            $school->delete();
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Impossible de supprimer cette école : des données y sont encore liées (élèves, classes, etc.).',
+            ], 409);
         }
-        $school->delete();
 
         return response()->json([
             'message' => 'École supprimée avec succès',

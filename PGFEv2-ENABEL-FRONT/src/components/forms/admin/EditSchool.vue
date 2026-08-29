@@ -14,6 +14,7 @@ import { useGetApi } from '@/composables/useGetApi'
 import { API_ROUTES } from '@/utils/constants/api_route'
 import { eventBus } from '@/utils/eventBus'
 import { showCustomToast } from '@/utils/widgets/custom_toast'
+import { DRC_PHONE_HINT, DRC_PHONE_PLACEHOLDER, normalizeDrcPhone } from '@/utils/phone'
 
 interface Province {
   id: number
@@ -144,7 +145,7 @@ async function handleSubmit() {
     fd.append('latitude', String(form.value.latitude))
   if (form.value.longitude !== '' && form.value.longitude != null)
     fd.append('longitude', String(form.value.longitude))
-  const phone = (form.value.phone_number || '').trim()
+  const phone = normalizeDrcPhone(form.value.phone_number)
   if (phone) fd.append('phone_number', phone)
   const email = (form.value.email || '').trim()
   if (email) fd.append('email', email)
@@ -257,7 +258,14 @@ async function handleSubmit() {
 
         <InputWrapper>
           <Label for="phone" class="text-sm font-medium">Téléphone</Label>
-          <Input id="phone" v-model="form.phone_number" class="h-10" :disabled="loading" />
+          <Input
+            id="phone"
+            v-model="form.phone_number"
+            class="h-10"
+            :placeholder="DRC_PHONE_PLACEHOLDER"
+            :disabled="loading"
+          />
+          <p class="text-xs text-muted-foreground mt-1">{{ DRC_PHONE_HINT }}</p>
         </InputWrapper>
 
         <InputWrapper>

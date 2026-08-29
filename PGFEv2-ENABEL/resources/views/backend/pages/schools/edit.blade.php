@@ -36,7 +36,9 @@
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1" for="phone_number">Téléphone</label>
-                <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number', $school->phone_number) }}" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm" />
+                <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number', $school->phone_number) }}" placeholder="+243812345678 ou 0812345678" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm" />
+                <p class="text-xs text-gray-500 mt-1">Optionnel. Formats : +243XXXXXXXXX ou 0XXXXXXXXX.</p>
+                @error('phone_number')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1" for="email">Email</label>

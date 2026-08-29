@@ -88,6 +88,7 @@ export const API_ROUTES = {
   GET_TYPES: 'geo/types',
   GET_ACADEMIC_LEVELS: 'academic/levels',
   GET_SCHOOLS: 'school/schools',
+  DELETE_SCHOOL: (id: number | string) => `school/schools/${id}`,
   //Student routes
   CREATE_STUDENT: 'students',
   GET_STUDENTS: 'students',

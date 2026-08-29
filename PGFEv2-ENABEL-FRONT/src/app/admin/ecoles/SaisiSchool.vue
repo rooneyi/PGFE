@@ -99,12 +99,19 @@ const deletingId = ref<number | null>(null)
 
 async function onDeleteSchool(id: number, name: string) {
   deletingId.value = id
-  const res = await deleteItem(`/schools/${id}`)
+  const res = await deleteItem(API_ROUTES.DELETE_SCHOOL(id))
   if (res) {
     showCustomToast({ message: `École "${name}" supprimée avec succès`, type: 'success' })
     eventBus.emit('schoolUpdated')
   } else {
-    showCustomToast({ message: delError.value || 'Suppression impossible', type: 'error' })
+    const msg = delError.value || 'Suppression impossible'
+    // Ne pas afficher une erreur de validation téléphone (create/update) sur un delete
+    showCustomToast({
+      message: /téléphone|phone/i.test(msg)
+        ? 'Suppression impossible. Réessayez ou vérifiez les données liées à cette école.'
+        : msg,
+      type: 'error',
+    })
   }
   deletingId.value = null
 }
