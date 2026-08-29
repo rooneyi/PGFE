@@ -34,6 +34,7 @@ export const API_ROUTES = {
   UPDATE_ADMIN_USER: (id: number | string) => `admin/users/${id}`,
   DELETE_ADMIN_USER: (id: number | string) => `admin/users/${id}`,
   GET_ROLES: 'admin/roles',
+  ADMIN_SYSTEM_PURGE: 'admin/system/purge',
   ASSIGN_ROLE_TO_PERSONAL: 'hr/academic-personals/assign-role-to-user',
 
   // Routes for Filiere

@@ -196,6 +196,13 @@ export const adminModuleItemsNav = [
     link: '/admin/type',
     permission: 'academic-levels.full',
   },
+  {
+    id: 5,
+    text: 'Purge données',
+    icon: 'hugeicons--delete-02',
+    link: '/admin/purge',
+    role: 'super-admin',
+  },
 ]
 export const infraModuleItemNav = [
   {

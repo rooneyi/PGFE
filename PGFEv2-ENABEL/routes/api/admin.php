@@ -1,6 +1,7 @@
 <?php
 // Admin routes
 
+use App\Http\Controllers\Api\Admin\DataPurgeController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\SuperAdminDashboardController;
@@ -15,4 +16,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(functi
     Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
     Route::apiResource('users', AdminUserController::class)->names('users');
     Route::patch('users/{user}/school', [AdminUserController::class, 'assignSchool'])->name('users.assignSchool');
+
+    // Danger zone: wipe operational data (super-admin only)
+    Route::post('system/purge', DataPurgeController::class)
+        ->middleware('role:super-admin')
+        ->name('system.purge');
 });

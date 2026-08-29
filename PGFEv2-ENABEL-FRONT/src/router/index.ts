@@ -75,6 +75,14 @@ router.beforeEach((to, from, next) => {
     }
   }
 
+  if (to.meta.role) {
+    const role = to.meta.role as string
+    if (!authStore.hasRole(role)) {
+      console.warn(`Access denied. Missing role: ${role}`)
+      return next({ path: '/' })
+    }
+  }
+
   next()
 })
 

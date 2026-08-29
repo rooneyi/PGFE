@@ -129,6 +129,7 @@ const props = defineProps<{
 const items = computed(() => {
   const navItems = props.moduleName ? modulesNavigation[props.moduleName] : []
   return navItems.filter((item: any) => {
+    if (item.role && !auth.hasRole(item.role)) return false
     if (!item.permission) return true
     return auth.can(item.permission)
   })

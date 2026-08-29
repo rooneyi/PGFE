@@ -67,6 +67,12 @@ const adminRoutes: RouteRecordRaw[] = [
     name: 'admin-schoolyears',
     component: () => import('@/app/admin/schoolyears/AdminSchoolYears.vue'),
   },
+  {
+    meta: { role: 'super-admin' },
+    path: '/admin/purge',
+    name: 'admin-purge',
+    component: () => import('@/app/admin/purge/AdminPurge.vue'),
+  },
 ]
 
 export { adminRoutes }
