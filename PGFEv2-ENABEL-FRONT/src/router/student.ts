@@ -20,6 +20,12 @@ const studentRoutes: RouteRecordRaw[] = [
   },
   {
     meta: { permission: 'students.view' },
+    path: '/apprenants/saisie-prealable/structure',
+    name: 'apprenants-module-saisie-structure',
+    component: () => import('../app/student/student/saisie-prealable/SaisiParametresEcole.vue'),
+  },
+  {
+    meta: { permission: 'students.view' },
     path: '/apprenants/saisie-prealable/classes',
     name: 'apprenants-module-saisie-classes',
     component: () => import('../app/student/student/saisie-prealable/SaisiClasse.vue'),

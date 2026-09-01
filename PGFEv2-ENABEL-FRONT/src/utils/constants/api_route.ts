@@ -90,6 +90,8 @@ export const API_ROUTES = {
   GET_ACADEMIC_LEVELS: 'academic/levels',
   GET_SCHOOLS: 'school/schools',
   DELETE_SCHOOL: (id: number | string) => `school/schools/${id}`,
+  SCHOOL_SETTINGS: 'school/settings',
+  EDUCATION_TRACKS: 'school/education-tracks',
   //Student routes
   CREATE_STUDENT: 'students',
   GET_STUDENTS: 'students',

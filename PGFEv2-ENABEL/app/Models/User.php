@@ -73,6 +73,13 @@ final class User extends Authenticatable
         return $this->hasOne(AcademicPersonal::class, 'user_id');
     }
 
+    public function getAcademicPersonalId(): ?int
+    {
+        $id = $this->academicPersonal?->id;
+
+        return $id ? (int) $id : null;
+    }
+
     public function parentProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Parents::class, 'user_id');

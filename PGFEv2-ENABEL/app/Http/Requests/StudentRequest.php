@@ -16,6 +16,42 @@ final class StudentRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        foreach (['country_id', 'province_id', 'territory_id', 'commune_id', 'academic_personal_id'] as $field) {
+            if (! $this->exists($field)) {
+                continue;
+            }
+            if ($this->isBlankOptionalId($this->input($field))) {
+                $this->merge([$field => null]);
+            }
+        }
+
+        if ($this->exists('address')) {
+            $address = $this->input('address');
+            if (! is_string($address) || trim($address) === '') {
+                $this->merge(['address' => null]);
+            }
+        }
+
+        $value = $this->input('academic_personal_id');
+        if (! $value) {
+            return;
+        }
+
+        if (is_numeric($value) && (int) $value > 0) {
+            $id = (int) $value;
+            if (\App\Models\AcademicPersonal::query()->whereKey($id)->exists()) {
+                $this->merge(['academic_personal_id' => $id]);
+
+                return;
+            }
+
+            $mapped = \App\Models\AcademicPersonal::query()->where('user_id', $id)->value('id');
+            $this->merge(['academic_personal_id' => $mapped ? (int) $mapped : null]);
+        }
+    }
+
     public function rules(): array
     {
         $studentId = $this->student?->id ?? null;
@@ -34,16 +70,16 @@ final class StudentRequest extends FormRequest
             'lastname' => [...$required, 'string', 'max:100'],
             'gender' => [...$required, new Enum(GenderEnum::class)],
             'civil_status' => [...$required, new Enum(CivilStatusEnum::class)],
-            'address' => [...$required, 'string', 'max:255'],
+            'address' => [...$nullable, 'string', 'max:255'],
             'birth_date' => [...$required, 'date'],
             'birth_place' => [...$required, 'string', 'max:100'],
             'phone_number' => [...$nullable, 'string', 'max:20', 'unique:students,phone_number,'.$studentId],
             'email' => [...$nullable, 'email', 'max:255', 'unique:students,email,'.$studentId],
             'image' => [...$nullable], // upload image optionnel
-            'country_id' => [...$required, 'exists:countries,id'],
-            'province_id' => [...$required, 'exists:provinces,id'],
-            'territory_id' => [...$required, 'exists:territories,id'],
-            'commune_id' => [...$required, 'exists:communes,id'],
+            'country_id' => [...$nullable, 'exists:countries,id'],
+            'province_id' => [...$nullable, 'exists:provinces,id'],
+            'territory_id' => [...$nullable, 'exists:territories,id'],
+            'commune_id' => [...$nullable, 'exists:communes,id'],
             'parents_id' => [...$nullable, 'exists:parents,id'],
             'parent2_id' => [...$nullable, 'exists:parents,id'],
             'parent3_id' => [...$nullable, 'exists:parents,id'],
@@ -88,5 +124,26 @@ final class StudentRequest extends FormRequest
                 }
             }
         });
+    }
+
+    public function messages(): array
+    {
+        return [
+            'academic_personal_id.exists' => 'Le personnel académique sélectionné est invalide.',
+        ];
+    }
+
+    private function isBlankOptionalId(mixed $value): bool
+    {
+        if ($value === null || $value === false) {
+            return true;
+        }
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+
+            return $normalized === '' || in_array($normalized, ['none', 'null', 'undefined', '0'], true);
+        }
+
+        return $value === 0;
     }
 }
