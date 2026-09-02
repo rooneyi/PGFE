@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class ParentRequest extends FormRequest
 {
@@ -15,26 +16,33 @@ final class ParentRequest extends FormRequest
 
     public function rules(): array
     {
+        $isUpdate = $this->isMethod('PUT') || $this->isMethod('PATCH');
+        $parentId = $this->route('parent')?->id ?? $this->parent?->id;
+
+        $phoneRules = [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^\+243[0-9]{9}$/',
+        ];
+
+        if ($isUpdate) {
+            $phoneRules[] = Rule::unique('parents', 'phone_number')->ignore($parentId);
+        }
+
+        $emailRules = ['nullable', 'email', 'max:255'];
+        if ($isUpdate) {
+            $emailRules[] = Rule::unique('parents', 'email')->ignore($parentId);
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
             'genre' => ['required', 'string', 'in:Masculin,Féminin,Non spécifié'],
             'identity_card' => ['nullable', 'string', 'max:255'],
-            'phone_number' => [
-                'required',
-                'string',
-                'max:255',
-                'regex:/^\+243[0-9]{9}$/',
-                'unique:parents,phone_number,'.$this->parent?->id,
-            ],
-
-            'email' => [
-                'nullable',
-                'email',
-                'max:255',
-                'unique:parents,email,'.$this->parent?->id,
-            ],
+            'phone_number' => $phoneRules,
+            'email' => $emailRules,
         ];
     }
 

@@ -73,8 +73,8 @@ final class StudentRequest extends FormRequest
             'address' => [...$nullable, 'string', 'max:255'],
             'birth_date' => [...$required, 'date'],
             'birth_place' => [...$required, 'string', 'max:100'],
-            'phone_number' => [...$nullable, 'string', 'max:20', 'unique:students,phone_number,'.$studentId],
-            'email' => [...$nullable, 'email', 'max:255', 'unique:students,email,'.$studentId],
+            'phone_number' => [...$nullable, 'string', 'max:20'],
+            'email' => [...$nullable, 'email', 'max:255'],
             'image' => [...$nullable], // upload image optionnel
             'country_id' => [...$nullable, 'exists:countries,id'],
             'province_id' => [...$nullable, 'exists:provinces,id'],

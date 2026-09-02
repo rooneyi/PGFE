@@ -188,58 +188,22 @@ final class StudentController extends Controller
 
             // Parent 1
             if (empty($data['parents_id']) && ! empty($data['parent'])) {
-
-                $parentData = $data['parent'];
-                $parentData['school_id'] = $schoolId;
-
-                $parent = Parents::where('phone_number', $parentData['phone_number'])
-                    ->where('school_id', $schoolId)
-                    ->first();
-
-                if (! $parent) {
-                    $parent = Parents::create($parentData);
-                }
-
+                $parent = $this->resolveOrCreateParent($data['parent'], $schoolId);
                 $data['parents_id'] = $parent->id;
-
                 unset($data['parent']);
             }
 
             // Parent 2
             if (empty($data['parent2_id']) && ! empty($data['parent2'])) {
-
-                $parent2Data = $data['parent2'];
-                $parent2Data['school_id'] = $schoolId;
-
-                $parent2 = Parents::where('phone_number', $parent2Data['phone_number'])
-                    ->where('school_id', $schoolId)
-                    ->first();
-
-                if (! $parent2) {
-                    $parent2 = Parents::create($parent2Data);
-                }
-
+                $parent2 = $this->resolveOrCreateParent($data['parent2'], $schoolId);
                 $data['parent2_id'] = $parent2->id;
-
                 unset($data['parent2']);
             }
 
             // Parent 3
             if (empty($data['parent3_id']) && ! empty($data['parent3'])) {
-
-                $parent3Data = $data['parent3'];
-                $parent3Data['school_id'] = $schoolId;
-
-                $parent3 = Parents::where('phone_number', $parent3Data['phone_number'])
-                    ->where('school_id', $schoolId)
-                    ->first();
-
-                if (! $parent3) {
-                    $parent3 = Parents::create($parent3Data);
-                }
-
+                $parent3 = $this->resolveOrCreateParent($data['parent3'], $schoolId);
                 $data['parent3_id'] = $parent3->id;
-
                 unset($data['parent3']);
             }
 
@@ -684,5 +648,39 @@ final class StudentController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Réutilise un parent existant (même numéro) ou en crée un nouveau.
+     * Plusieurs élèves peuvent partager le même parent.
+     */
+    private function resolveOrCreateParent(array $parentData, ?int $schoolId): Parents
+    {
+        if ($schoolId) {
+            $parentData['school_id'] = $schoolId;
+        }
+
+        $phoneNumber = $parentData['phone_number'] ?? null;
+        if ($phoneNumber) {
+            $query = Parents::query()->where('phone_number', $phoneNumber);
+
+            if ($schoolId) {
+                $query->where(function ($q) use ($schoolId): void {
+                    $q->where('school_id', $schoolId)->orWhereNull('school_id');
+                });
+            }
+
+            $existing = $query->first();
+
+            if ($existing) {
+                if ($schoolId && ! $existing->school_id) {
+                    $existing->update(['school_id' => $schoolId]);
+                }
+
+                return $existing;
+            }
+        }
+
+        return Parents::create($parentData);
     }
 }

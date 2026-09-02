@@ -88,7 +88,8 @@ const filteredData = computed(() => {
       (p: any) =>
         p.name?.toLowerCase().includes(search) ||
         p.lastname?.toLowerCase().includes(search) ||
-        p.firstname?.toLowerCase().includes(search),
+        p.firstname?.toLowerCase().includes(search) ||
+        p.phone_number?.toLowerCase().includes(search),
     )
   }
 

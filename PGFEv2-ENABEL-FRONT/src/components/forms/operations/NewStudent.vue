@@ -83,8 +83,6 @@ const schemaForm = z.object({
   birth_date: z.string({ required_error: 'Veuillez saisir la date de naissance' }),
   birth_place: z.string({ required_error: 'Veuillez saisir le lieu de naissance' }).min(2).max(100),
   identity_card: z.string().min(2).max(100).optional(),
-  phone_number: z.string().min(2).max(30).nullable().optional(),
-  email: z.string().email('Email invalide').nullable().optional(),
   image: z.string().optional(),
   note: z.string().optional(),
   // Champs d'inscription (optionnels) - à confirmer côté backend
@@ -109,10 +107,8 @@ const { value: address, errorMessage: addressError } = useField<string>('address
 const { value: birth_date, errorMessage: birthDateError } = useField<string>('birth_date')
 const { value: birth_place, errorMessage: birthPlaceError } = useField<string>('birth_place')
 const { value: identity_card, errorMessage: identityCardError } = useField<string>('identity_card')
-const { value: phone_number, errorMessage: phoneNumberError } = useField<string>('phone_number')
-const { value: email, errorMessage: emailError } = useField<string>('email')
 
-// IDs en tant que n'importe quel type (string | number) mais traités comme string pour Radix Select
+// IDs en tant que n'importe quel type
 const { value: country_id, errorMessage: countryIdError } = useField<any>('country_id')
 const { value: province_id, errorMessage: provinceIdError } = useField<any>('province_id')
 const { value: territory_id, errorMessage: territoryIdError } = useField<any>('territory_id')
@@ -351,6 +347,14 @@ const onSubmit = handleSubmit(async (values) => {
     payload.address = null
   }
 
+  // Les coordonnées affichées dans la section parent ne sont pas celles de l'élève.
+  payload.phone_number = null
+  payload.email = null
+  delete payload.phone_number_2
+  delete payload.email_2
+  delete payload.phone_number_3
+  delete payload.email_3
+
   // Mapper les champs d'inscription SI présents (clé API à confirmer via Postman)
   if (previousSchool?.value) {
     payload.previousSchool = previousSchool.value
@@ -408,6 +412,10 @@ onBeforeUnmount(() => {
 const parents_id_2 = ref<string>('')
 const parents_id_3 = ref<string>('')
 
+// Coordonnées du parent 1 (affichage uniquement, liées via parents_id)
+const parent1_phone = ref<string>('')
+const parent1_email = ref<string>('')
+
 // Coordonnées optionnelles pour Parent 2 et Parent 3
 const phone_number_2 = ref<string>('')
 const email_2 = ref<string>('')
@@ -443,8 +451,8 @@ watch(parents_id_3, (val) => {
 
 // Auto-fill téléphone/email depuis le parent 1 sélectionné
 function handleParent1Selected(parent: any) {
-  if (parent?.phone_number) phone_number.value = parent.phone_number
-  if (parent?.email) email.value = parent.email
+  parent1_phone.value = parent?.phone_number ?? ''
+  parent1_email.value = parent?.email ?? ''
 }
 
 // Auto-fill téléphone/email depuis le parent 2 sélectionné
@@ -627,16 +635,24 @@ function handleParent3Selected(parent: any) {
           <span v-if="parentIdError" class="text-xs text-red-500">{{ parentIdError }}</span>
         </InputWrapper>
 
-        <!-- Coordonnées principales (rattachées au dossier) -->
+        <!-- Coordonnées du parent sélectionné (informatives) -->
         <InputWrapper>
-          <Label class="text-sm">Téléphone</Label>
-          <Input class="bg-white transition-all h-10 rounded-md" v-model="phone_number" />
-          <span v-if="phoneNumberError" class="text-xs text-red-500">{{ phoneNumberError }}</span>
+          <Label class="text-sm">Téléphone parent</Label>
+          <Input
+            class="bg-gray-50 transition-all h-10 rounded-md"
+            v-model="parent1_phone"
+            readonly
+            placeholder="Sélectionnez un parent"
+          />
         </InputWrapper>
         <InputWrapper>
-          <Label class="text-sm">Adresse email</Label>
-          <Input class="bg-white transition-all h-10 rounded-md" v-model="email" />
-          <span v-if="emailError" class="text-xs text-red-500">{{ emailError }}</span>
+          <Label class="text-sm">Email parent</Label>
+          <Input
+            class="bg-gray-50 transition-all h-10 rounded-md"
+            v-model="parent1_email"
+            readonly
+            placeholder="Sélectionnez un parent"
+          />
         </InputWrapper>
 
         <!-- Parent 2 (optionnel) - s'affiche si Parent 1 est renseigné -->

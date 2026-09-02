@@ -82,7 +82,7 @@ const onSubmit = handleSubmit(async (values) => {
       message: response.value?.message || 'Parent créé avec succès',
       type: 'success',
     })
-    emit('created', response.value?.data)
+    emit('created', response.value)
     resetForm()
     emit('update:open', false)
     eventBus.emit('parentCreated')
