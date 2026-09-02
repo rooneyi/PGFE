@@ -30,12 +30,16 @@ final class StoreFiliaireRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:filiaires,name',
+                Rule::unique('filiaires', 'name')->where('school_id', $this->user()?->school_id),
             ],
             'code' => [
                 'nullable',
                 'string',
                 'max:255',
+            ],
+            'with_default_cycles' => [
+                'sometimes',
+                'boolean',
             ],
         ];
     }

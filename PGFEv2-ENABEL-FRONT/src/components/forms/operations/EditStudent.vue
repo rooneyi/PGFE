@@ -36,26 +36,20 @@ const router = useRouter()
 //Create form schema
 const schemaForm = z.object({
   country_id: z.preprocess(
-    (val) => (val === '' || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: 'Veuillez sélectionner le pays' }).min(1, 'Le pays est requis'),
+    (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+    z.number().int().positive().nullable().optional(),
   ),
   province_id: z.preprocess(
-    (val) => (val === '' || val === undefined ? undefined : Number(val)),
-    z
-      .number({ required_error: 'Veuillez sélectionner la province' })
-      .min(1, 'La province est requise'),
+    (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+    z.number().int().positive().nullable().optional(),
   ),
   territory_id: z.preprocess(
-    (val) => (val === '' || val === undefined ? undefined : Number(val)),
-    z
-      .number({ required_error: 'Veuillez sélectionner le territoire' })
-      .min(1, 'Le territoire est requis'),
+    (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+    z.number().int().positive().nullable().optional(),
   ),
   commune_id: z.preprocess(
-    (val) => (val === '' || val === undefined ? undefined : Number(val)),
-    z
-      .number({ required_error: 'Veuillez sélectionner la commune' })
-      .min(1, 'La commune est requise'),
+    (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+    z.number().int().positive().nullable().optional(),
   ),
   classroom_id: z.preprocess(
     (val) => (val === '' || val === undefined ? undefined : Number(val)),
@@ -86,7 +80,7 @@ const schemaForm = z.object({
   firstname: z.string({ required_error: 'Veuillez saisir le prénom' }).min(2).max(100),
   gender: z.string({ required_error: 'Veuillez sélectionner le genre' }),
   civil_status: z.string({ required_error: "Veuillez sélectionner l'état civil" }),
-  address: z.string({ required_error: "Veuillez saisir l'adresse" }).min(2).max(255),
+  address: z.string().max(255).optional().or(z.literal('')),
   birth_date: z.string({ required_error: 'Veuillez saisir la date de naissance' }),
   birth_place: z.string({ required_error: 'Veuillez saisir le lieu de naissance' }).min(2).max(100),
   identity_card: z.string().min(2).max(100).optional(),
@@ -145,7 +139,19 @@ const isInitialLoading = ref(false)
 // Récupérer l'utilisateur connecté
 const authStore = useAuthStore()
 const userSchoolId = computed(() => authStore.user?.school_id || null)
-const currentUserId = computed(() => authStore.user?.id || null)
+
+const toOptionalAcademicPersonalId = (value: unknown): number | null => {
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    return toOptionalAcademicPersonalId(obj.academic_personal_id ?? obj.id)
+  }
+  const raw = String(value ?? '').trim().toLowerCase()
+  if (!raw || raw === 'none' || raw === 'null' || raw === 'undefined' || raw === '0') {
+    return null
+  }
+  const n = Number(raw)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
 // Charger toutes les données de référence
 const { data: cyclesData, fetchData: fetchCycles } = useGetApi(API_ROUTES.GET_CYCLES)
 const { data: academicLevelsData, fetchData: fetchAcademicLevels } = useGetApi(
@@ -259,16 +265,19 @@ const fetchStudentById = async () => {
     }
 
     // Geographical Info
-    country_id.value = String(student.country_id)
-    await fetchProvinces({ country_id: student.country_id })
-    province_id.value = String(student.province_id)
-
-    await Promise.all([
-      fetchTerritories({ province_id: student.province_id }),
-      fetchCommunes({ province_id: student.province_id }),
-    ])
-    territory_id.value = String(student.territory_id)
-    commune_id.value = String(student.commune_id)
+    if (student.country_id) {
+      country_id.value = String(student.country_id)
+      await fetchProvinces({ country_id: student.country_id })
+    }
+    if (student.province_id) {
+      province_id.value = String(student.province_id)
+      await Promise.all([
+        fetchTerritories({ province_id: student.province_id }),
+        fetchCommunes({ province_id: student.province_id }),
+      ])
+    }
+    if (student.territory_id) territory_id.value = String(student.territory_id)
+    if (student.commune_id) commune_id.value = String(student.commune_id)
 
     // Parents
     parents_id.value = String(student.parents_id)
@@ -436,7 +445,12 @@ const onSubmit = handleSubmit(async (values) => {
     ...(parents_id_2.value && email_2.value ? { email_2: email_2.value } : {}),
     ...(parents_id_3.value && phone_number_3.value ? { phone_number_3: phone_number_3.value } : {}),
     ...(parents_id_3.value && email_3.value ? { email_3: email_3.value } : {}),
-    academic_personal_id: currentUserId.value,
+    academic_personal_id: toOptionalAcademicPersonalId(
+      (values as any).academic_personal_id ??
+        (authStore.user as any)?.academic_personal_id ??
+        (authStore.user as any)?.academicPersonal?.id ??
+        (authStore.user as any)?.academic_personal?.id,
+    ),
   }
 
   // Convertir tous les IDs restants en Number
@@ -453,6 +467,12 @@ const onSubmit = handleSubmit(async (values) => {
   idFields.forEach((field) => {
     if (payload[field]) payload[field] = Number(payload[field])
   })
+  ;['country_id', 'province_id', 'territory_id', 'commune_id'].forEach((field) => {
+    payload[field] = toOptionalAcademicPersonalId(payload[field])
+  })
+  if (!payload.address || String(payload.address).trim() === '') {
+    payload.address = null
+  }
 
   // Mapper les champs d'inscription SI présents (clé API à confirmer via Postman)
   if (previousSchool?.value) {
@@ -460,15 +480,6 @@ const onSubmit = handleSubmit(async (values) => {
   }
   if (percentageObtained?.value !== undefined && percentageObtained?.value !== '') {
     payload.percentageObtained = Number(percentageObtained.value)
-  }
-
-  // Vérifier que l'ID utilisateur existe
-  if (!currentUserId.value) {
-    showCustomToast({
-      message: "Impossible de récupérer l'utilisateur connecté",
-      type: 'error',
-    })
-    return
   }
 
   await putData(API_ROUTES.UPDATE_STUDENT.replace(':student', studentId), payload)
@@ -809,10 +820,7 @@ function handleParent3Selected(parent: any) {
       >
         <!-- Pays -->
         <InputWrapper>
-          <Label class="text-sm font-medium">
-            Pays
-            <SpanRequired />
-          </Label>
+          <Label class="text-sm font-medium">Pays</Label>
           <Select v-model="country_id">
             <SelectTrigger class="!h-10 bg-white w-full">
               <SelectValue placeholder="Sélectionnez un pays" />
@@ -834,10 +842,7 @@ function handleParent3Selected(parent: any) {
 
         <!-- Province (dépend du pays) -->
         <InputWrapper>
-          <Label class="text-sm font-medium">
-            Province
-            <SpanRequired />
-          </Label>
+          <Label class="text-sm font-medium">Province</Label>
           <Select v-model="province_id" :disabled="!country_id">
             <SelectTrigger class="!h-10 bg-white w-full">
               <SelectValue
@@ -863,10 +868,7 @@ function handleParent3Selected(parent: any) {
 
         <!-- Territoire (dépend de la province) -->
         <InputWrapper>
-          <Label class="text-sm font-medium">
-            Ville/Territoire
-            <SpanRequired />
-          </Label>
+          <Label class="text-sm font-medium">Ville/Territoire</Label>
           <Select v-model="territory_id" :disabled="!province_id">
             <SelectTrigger class="!h-10 bg-white w-full">
               <SelectValue
@@ -892,10 +894,7 @@ function handleParent3Selected(parent: any) {
 
         <!-- Commune (dépend de la province) -->
         <InputWrapper>
-          <Label class="text-sm font-medium">
-            Commune
-            <SpanRequired />
-          </Label>
+          <Label class="text-sm font-medium">Commune</Label>
           <Select v-model="commune_id" :disabled="!province_id">
             <SelectTrigger class="!h-10 bg-white w-full">
               <SelectValue
@@ -919,10 +918,7 @@ function handleParent3Selected(parent: any) {
           <span v-if="communeIdError" class="text-xs text-red-500">{{ communeIdError }}</span>
         </InputWrapper>
         <InputWrapper>
-          <Label class="text-sm">
-            Adresse
-            <SpanRequired />
-          </Label>
+          <Label class="text-sm">Adresse</Label>
           <Input class="bg-white transition-all h-10 rounded-md" v-model="address" />
           <span v-if="addressError" class="text-xs text-red-500">{{ addressError }}</span>
         </InputWrapper>

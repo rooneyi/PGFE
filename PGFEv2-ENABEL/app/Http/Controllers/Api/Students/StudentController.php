@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\Students;
 
-use const n;
-
 use App\Exports\StudentsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudentRequest;
+use App\Models\AcademicPersonal;
 use App\Models\Classroom;
 use App\Models\Parents;
 use App\Models\Registration;
@@ -258,13 +257,11 @@ final class StudentController extends Controller
             $existingStudent = $dupQuery->first();
 
             $classroomId = $data['classroom_id'] ?? null;
+            $classroom = null;
 
-            $hasRegFields = isset(
-                $data['academic_personal_id'],
-                $data['academic_level_id'],
-                $data['filiaire_id'],
-                $data['cycle_id']
-            );
+            $hasRegFields = ! empty($data['academic_level_id'])
+                && ! empty($data['filiaire_id'])
+                && ! empty($data['cycle_id']);
 
             $shouldRegister = ! empty($classroomId) && $hasRegFields;
 
@@ -272,8 +269,6 @@ final class StudentController extends Controller
             $createdRegistration = false;
             $registration = null;
             $student = $existingStudent;
-
-            $incompleteRegistration = ! empty($classroomId) && ! $hasRegFields;
 
             // =============================
             // Validation classe
@@ -359,7 +354,11 @@ final class StudentController extends Controller
                             'school_id' => $schoolId,
                             'classroom_id' => $classroomId,
                             'school_year_id' => $activeYear->id,
-                            'academic_personal_id' => auth()->user()->id,
+                            'academic_personal_id' => $this->resolveAcademicPersonalId(
+                                $data['academic_personal_id'] ?? null,
+                                $user,
+                                $classroom?->titulaire_id ?? null
+                            ),
                             'academic_level_id' => $data['academic_level_id'],
                             'filiaire_id' => $data['filiaire_id'] ?? null,
                             'cycle_id' => $data['cycle_id'] ?? null,
@@ -474,7 +473,7 @@ final class StudentController extends Controller
             // Mise à jour "one shot" : si des informations académiques sont fournies,
             // propager aussi la modification sur l'inscription (Registration) de l'élève.
             $classroomId = $data['classroom_id'] ?? null;
-            $hasRegFields = isset($data['academic_personal_id'], $data['academic_level_id'], $data['filiaire_id'], $data['cycle_id']);
+            $hasRegFields = ! empty($data['academic_level_id']) && ! empty($data['filiaire_id']) && ! empty($data['cycle_id']);
 
             if ($classroomId && $hasRegFields) {
                 $schoolId = $student->school_id ?? auth()->user()?->school_id;
@@ -531,7 +530,8 @@ final class StudentController extends Controller
                 // Récupérer ou créer l'inscription pour l'année scolaire active
                 $activeYear = SchoolYear::active((int) $schoolId);
                 if (! $activeYear) {
-                    return response()->json([n + 'success' => false,
+                    return response()->json([
+                        'success' => false,
                         'message' => "Aucune année scolaire active pour cette école. Impossible de mettre à jour l'inscription.",
                     ], 422);
                 }
@@ -546,11 +546,15 @@ final class StudentController extends Controller
                     'school_id' => $schoolId,
                     'classroom_id' => $classroomId,
                     'school_year_id' => $activeYear->id,
-                    'academic_personal_id' => $data['academic_personal_id'],
+                    'academic_personal_id' => $this->resolveAcademicPersonalId(
+                        $data['academic_personal_id'] ?? null,
+                        auth()->user(),
+                        $classroom?->titulaire_id ?? ($registration?->academic_personal_id ?? null)
+                    ),
                     'academic_level_id' => $academicLevelId,
                     'filiaire_id' => $filiaireId,
                     'cycle_id' => $cycleId,
-                    'note' => $data['note'] ?? ($registration->note ?? null),
+                    'note' => $data['note'] ?? ($registration?->note ?? null),
                 ];
 
                 if ($registration) {
@@ -655,5 +659,30 @@ final class StudentController extends Controller
         $count = Student::where('matricule', 'like', "{$prefix}-%")->count() + 1;
 
         return sprintf('%s-%05d', $prefix, $count);
+    }
+
+    /**
+     * Map a submitted id to academic_personals.id.
+     * Accepts academic_personals.id, users.id (via user_id), or a fallback such as classroom titulaire.
+     */
+    private function resolveAcademicPersonalId(mixed $value, ?User $user, mixed $fallback = null): ?int
+    {
+        foreach ([$value, $fallback, $user?->academicPersonal?->id] as $candidate) {
+            if (! is_numeric($candidate) || (int) $candidate <= 0) {
+                continue;
+            }
+
+            $id = (int) $candidate;
+            if (AcademicPersonal::query()->whereKey($id)->exists()) {
+                return $id;
+            }
+
+            $mapped = AcademicPersonal::query()->where('user_id', $id)->value('id');
+            if ($mapped) {
+                return (int) $mapped;
+            }
+        }
+
+        return null;
     }
 }

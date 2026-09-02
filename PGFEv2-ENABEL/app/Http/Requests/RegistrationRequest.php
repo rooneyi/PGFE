@@ -16,13 +16,39 @@ final class RegistrationRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('academic_personal_id')) {
+            return;
+        }
+
+        $value = $this->input('academic_personal_id');
+        if ($value === '' || $value === 'none' || $value === '0' || $value === 0 || $value === null || $value === 'null') {
+            $this->merge(['academic_personal_id' => null]);
+
+            return;
+        }
+
+        if (is_numeric($value) && (int) $value > 0) {
+            $id = (int) $value;
+            if (\App\Models\AcademicPersonal::query()->whereKey($id)->exists()) {
+                $this->merge(['academic_personal_id' => $id]);
+
+                return;
+            }
+
+            $mapped = \App\Models\AcademicPersonal::query()->where('user_id', $id)->value('id');
+            $this->merge(['academic_personal_id' => $mapped ? (int) $mapped : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'student_id' => ['prohibited'],
             'classroom_id' => ['sometimes', 'exists:classrooms,id'],
             'filiaire_id' => ['required', 'exists:filiaires,id'],
-            'academic_personal_id' => ['required', 'exists:academic_personals,id'],
+            'academic_personal_id' => ['nullable', 'exists:academic_personals,id'],
             'academic_level_id' => ['required', 'exists:academic_levels,id'],
             'cycle_id' => ['required', 'exists:cycles,id'],
             'note' => ['nullable', 'string'],
@@ -58,8 +84,7 @@ final class RegistrationRequest extends FormRequest
             'classroom_id.exists' => 'La classe spécifiée est introuvable.',
             'filiaire_id.required' => 'La filière (filiaire_id) est requise.',
             'filiaire_id.exists' => 'La filière indiquée est introuvable.',
-            'academic_personal_id.required' => 'Le personnel académique (academic_personal_id) est requis.',
-            'academic_personal_id.exists' => 'Le personnel académique indiqué est introuvable.',
+            'academic_personal_id.exists' => 'Le personnel académique sélectionné est invalide.',
             'academic_level_id.required' => 'Le niveau académique (academic_level_id) est requis.',
             'academic_level_id.exists' => 'Le niveau académique indiqué est introuvable.',
             'cycle_id.required' => 'Le cycle (cycle_id) est requis.',

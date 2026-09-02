@@ -8,7 +8,9 @@ use App\Http\Controllers\Api\Courses\CourseController;
 use App\Http\Controllers\Api\Filiaires\ListsFiliaireController;
 use App\Http\Controllers\Api\Filiaires\StoreFiliaireController;
 use App\Http\Controllers\Api\Filiaires\UpdateFiliaireController;
+use App\Http\Controllers\Api\Schools\EducationTracksController;
 use App\Http\Controllers\Api\Schools\SchoolController;
+use App\Http\Controllers\Api\Schools\SchoolSettingsController;
 use App\Http\Controllers\Api\SchooYears\SchoolYearController;
 use App\Http\Controllers\Api\Semester\SemesterController;
 use App\Http\Controllers\Api\Students\StudentRegistrationController;
@@ -18,6 +20,10 @@ Route::middleware('auth:sanctum')
     ->prefix('school')
     ->name('school.')
     ->group(function () {
+        Route::get('settings', [SchoolSettingsController::class, 'show']);
+        Route::put('settings', [SchoolSettingsController::class, 'update']);
+        Route::get('education-tracks', [EducationTracksController::class, 'show']);
+        Route::post('education-tracks', [EducationTracksController::class, 'store']);
         Route::apiResource('schools', SchoolController::class);
         Route::apiResource('classrooms', ClassroomController::class);
         Route::apiResource('courses', CourseController::class);

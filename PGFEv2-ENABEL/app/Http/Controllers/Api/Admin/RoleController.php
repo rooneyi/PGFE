@@ -15,7 +15,7 @@ final class RoleController extends Controller
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if (! $user || ! $user->hasAnyRole(['admin', 'admin-ecole'])) {
+        if (! $user || ! $user->hasAnyRole(['super-admin', 'admin', 'admin-ecole'])) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
         $roles = Role::with('permissions')->get();

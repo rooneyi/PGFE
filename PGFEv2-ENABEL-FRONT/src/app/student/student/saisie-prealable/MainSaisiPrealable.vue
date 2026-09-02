@@ -44,6 +44,7 @@ import FilterPopover from '@/components/atoms/FilterPopover.vue'
 import FilterBadges from '@/components/atoms/FilterBadges.vue'
 import ListAcademicalLevel from '@/utils/widgets/vues/ListAcademicalLevel.vue'
 import { ref, computed, reactive, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const page = ref(1)
 const perPage = ref(15)
@@ -205,6 +206,17 @@ const totalItems = computed(() => filteredItems.value.length)
     ]"
   >
     <BoxPanelWrapper>
+      <div class="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+        L’école gère aussi la
+        <strong>maternelle</strong>, le <strong>primaire</strong> et la
+        <strong>7ème / 8ème de base</strong>. Les humanités vont de la 1ère à la 4ème.
+        <RouterLink
+          to="/apprenants/saisie-prealable/structure"
+          class="ml-1 font-semibold text-primary underline"
+        >
+          Installer la structure
+        </RouterLink>
+      </div>
       <div class="flex items-center gap-3 justify-between">
         <div class="flex flex-1 items-center gap-2">
           <div class="relative w-full max-w-xs">

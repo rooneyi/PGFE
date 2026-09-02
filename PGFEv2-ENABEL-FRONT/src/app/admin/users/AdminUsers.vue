@@ -59,11 +59,20 @@ const canCreate = computed(
     auth.hasRole('admin-ecole'),
 )
 const canUpdate = computed(
-  () => auth.can('users.update') || auth.hasRole('super-admin') || auth.hasRole('admin-ecole'),
+  () =>
+    auth.can('users.update') ||
+    auth.hasRole('super-admin') ||
+    auth.hasRole('admin') ||
+    auth.hasRole('admin-ecole'),
 )
 const canDelete = computed(() => auth.can('users.delete') || auth.hasRole('super-admin'))
 // Admin-ecole : rôle forcé à "tiers", super-admin peut choisir
-const canCreateAny = computed(() => auth.can('users.create.any') || auth.hasRole('super-admin'))
+const canCreateAny = computed(
+  () =>
+    auth.can('users.create.any') ||
+    auth.hasRole('super-admin') ||
+    auth.hasRole('admin'),
+)
 const forceTiers = computed(() => !canCreateAny.value)
 
 const breadcrumbItems = {
@@ -108,13 +117,19 @@ const availablePersonals = computed(() => {
   return all.filter((p) => !p.user_id)
 })
 
-/** Rôles autorisés par POST /admin/users */
+/** Rôles d'agents d'école : super-admin et admin peuvent tous les créer. */
 const directCreateRoles = computed(() => {
   if (forceTiers.value) {
     return [{ name: 'tiers', label: 'Tiers' }]
   }
   return [
     { name: 'admin-ecole', label: 'Admin école' },
+    { name: 'enseignant', label: 'Enseignant' },
+    { name: 'comptable', label: 'Comptable' },
+    { name: 'rh', label: 'RH' },
+    { name: 'stoker', label: 'Stock' },
+    { name: 'inspecteur', label: 'Inspecteur' },
+    { name: 'disciplinaire', label: 'Disciplinaire' },
     { name: 'tiers', label: 'Tiers' },
   ]
 })

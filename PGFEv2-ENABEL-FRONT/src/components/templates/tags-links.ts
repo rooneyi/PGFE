@@ -1,5 +1,10 @@
 export const tagNavSaisie = [
   {
+    name: 'structure',
+    text: 'Structure',
+    href: '/apprenants/saisie-prealable/structure',
+  },
+  {
     name: 'sections',
     text: 'Sections',
     href: '/apprenants/saisie-prealable',

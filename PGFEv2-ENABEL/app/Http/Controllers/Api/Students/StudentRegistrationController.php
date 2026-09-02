@@ -278,7 +278,7 @@ final class StudentRegistrationController extends Controller
             'school_id' => $schoolId,
             'classroom_id' => $classroomId,
             'school_year_id' => $schoolYearId,
-            'academic_personal_id' => $data['academic_personal_id'],
+            'academic_personal_id' => $data['academic_personal_id'] ?? null,
             'academic_level_id' => $data['academic_level_id'],
             // Nouvelles colonnes
             'filiaire_id' => $data['filiaire_id'],

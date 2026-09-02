@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Filiaire;
+use App\Services\Academic\EducationStructureBootstrapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -51,24 +52,7 @@ final class FiliaireWebController extends Controller
                 'name' => $data['name'],
             ]);
 
-            $cycles = [
-                'Long' => ['1er', '2nd', '3eme', '4eme', '5eme', '6eme'],
-                'Court' => ['1er', '2n', '3em', '4eme'],
-            ];
-
-            foreach ($cycles as $cycleName => $levels) {
-                $cycle = $filiaire->cycles()->create([
-                    'school_id' => $filiaire->school_id,
-                    'name' => $cycleName,
-                ]);
-
-                foreach ($levels as $levelName) {
-                    $cycle->academicLevels()->create([
-                        'school_id' => $filiaire->school_id,
-                        'name' => $levelName,
-                    ]);
-                }
-            }
+            app(EducationStructureBootstrapper::class)->attachDefaultSecondaryCycles($filiaire);
         });
 
         return redirect()->route('admin.filiaires.index')->with('success', 'Filière créée.');

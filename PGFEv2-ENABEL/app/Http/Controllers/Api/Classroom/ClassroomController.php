@@ -76,6 +76,7 @@ final class ClassroomController extends Controller
     public function store(ClassroomRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $data['titulaire_id'] = $data['titulaire_id'] ?? null;
         // Toujours utiliser le school_id de l'utilisateur connecté
         $data['school_id'] = $request->user()->school_id;
 
@@ -113,6 +114,9 @@ final class ClassroomController extends Controller
     public function update(ClassroomRequest $request, Classroom $classroom): JsonResponse
     {
         $data = $request->validated();
+        if (array_key_exists('titulaire_id', $data)) {
+            $data['titulaire_id'] = $data['titulaire_id'] ?: null;
+        }
 
         // Si on change de niveau académique, vérifier qu'il existe
         if (array_key_exists('academic_level_id', $data)) {
